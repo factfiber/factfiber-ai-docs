@@ -39,17 +39,27 @@ class GitHubClient:
         self.settings = get_settings()
         self.base_url = "https://api.github.com"
 
+        self.headers = {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+        }
+
+        if self.settings.github.token:
+            self.headers["Authorization"] = (
+                f"Bearer {self.settings.github.token}"
+            )
+
+    def is_configured(self) -> bool:
+        """Check if GitHub client is properly configured with token."""
+        return bool(self.settings.github.token)
+
+    def require_token(self) -> None:
+        """Raise an error if GitHub token is not configured."""
         if not self.settings.github.token:
             raise ValueError(
                 "GitHub token is required but not configured. "
                 "Please set the GITHUB_TOKEN environment variable."
             )
-
-        self.headers = {
-            "Authorization": f"Bearer {self.settings.github.token}",
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2022-11-28",
-        }
 
     async def get_organization_repositories(
         self,
@@ -67,6 +77,7 @@ class GitHubClient:
         Returns:
             List of repository information
         """
+        self.require_token()
         repositories = []
         page = 1
 

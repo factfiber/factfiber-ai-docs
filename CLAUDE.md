@@ -5,13 +5,43 @@ with code in this repository.
 
 ## Current Working State
 
-**IMPORTANT**: Check `tmp/issues/CLAUDE.md` for the current state of
-active issues and development progress. This file tracks:
+### Sprint 3: FastAPI Integration - COMPLETED ✅
 
-- Active issues being worked on
-- Current development session focus
-- Next steps and priorities
-- Files under investigation
+Successfully implemented comprehensive REST API for repository management:
+
+✅ **Completed in Sprint 3:**
+
+- FastAPI server with complete REST endpoints (/repos/, /repos/config,
+  /repos/discover, /repos/enroll, /repos/unenroll, /repos/enroll-all)
+- CLI command `ff-docs serve-api` to start FastAPI server
+- GitHub token optional configuration for basic testing
+- Comprehensive Pydantic models for request/response validation
+- Error handling with proper HTTP status codes
+- Health check endpoints at /health/
+
+**Next Phase:** Sprint 4: Authentication & Security
+
+**Current API Endpoints:**
+
+- `GET /health/` - Health check
+- `GET /repos/config` - Configuration status
+- `GET /repos/` - List enrolled repositories
+- `GET /repos/discover` - Discover repositories (requires GitHub token)
+- `POST /repos/enroll` - Enroll repository
+- `DELETE /repos/unenroll` - Remove repository
+- `POST /repos/enroll-all` - Bulk enrollment (requires GitHub token)
+
+**Test Commands:**
+
+```bash
+# Start FastAPI server
+poetry run ff-docs serve-api --port 8002
+
+# Test endpoints
+curl http://localhost:8002/health/
+curl http://localhost:8002/repos/config
+curl http://localhost:8002/repos/
+```
 
 ## Project Overview
 
@@ -41,6 +71,100 @@ when poetry.lock/pyproject.toml exists:
   - Ruff check: `poetry run ruff check path/to/file.py`
   - Ruff format: `poetry run ruff format path/to/file.py`
   - Type check: `poetry run mypy src/`
+
+### Systematic Linting Error Fixing Strategy
+
+When facing multiple linting errors, use this systematic approach:
+
+1. **Create a TODO list** to track progress through all errors
+2. **Group errors by type** (T201, S603/S607, B904, EM102, etc.) for
+   efficient batch fixing
+3. **Fix errors in order of complexity** - start with simple ones like
+   type annotations
+4. **Test Black/Ruff interaction** after each fix to ensure noqa comments
+   stay in place
+
+### Common Linting Error Types and Fixes
+
+**T201 (Print statements):**
+
+```python
+# Scripts: Add blanket suppression at top
+# ruff: noqa: T201
+
+# Library code: Use logging instead
+import logging
+logger = logging.getLogger(__name__)
+logger.info("Processing %d items", count)  # Use % formatting for logging
+```
+
+**S603/S607 (Subprocess security):**
+
+```python
+# Add targeted noqa for legitimate subprocess calls
+result = subprocess.run(  # noqa: S603
+    ["cmake", "--version"],  # noqa: S607
+    capture_output=True,
+    text=True,
+    check=True,
+)
+```
+
+**B904 (Exception chaining):**
+
+```python
+# Always chain exceptions
+try:
+    risky_operation()
+except OSError as e:
+    msg = f"Operation failed: {e}"
+    raise CustomError(msg) from e  # Chain with 'from e'
+```
+
+**EM102 (F-string in exception message):**
+
+```python
+# Extract f-string to variable first
+try:
+    operation()
+except Error as e:
+    msg = f"Failed processing {item}: {e}"  # Extract to variable
+    raise ProcessingError(msg) from e  # Pass variable to exception
+```
+
+**RUF013 (Implicit Optional):**
+
+```python
+# Use explicit union syntax
+def func(param: str | None = None) -> int | None:  # Not Optional[str]
+    pass
+```
+
+**TRY301 (Exception raise within try):**
+
+```python
+# Extract error raising to helper function
+def _raise_validation_error(self, message: str) -> None:
+    """Raise validation error with consistent format."""
+    raise ValidationError(f"Validation failed: {message}")
+
+# Use in try block
+if not condition:
+    self._raise_validation_error("Invalid input")
+```
+
+### Common Linting Issues to Avoid
+
+1. **Missing Type Annotations** - Annotate ALL function parameters and returns
+2. **Using `Any` Type** - Use proper types with TYPE_CHECKING imports
+3. **Unused Arguments** - Add `# noqa: ARG001` for placeholder functions
+4. **Missing Issue Links** - Include issue references in all TODOs
+5. **Line Length** - Keep lines under 80 characters
+6. **Import Order** - Follow the import order specified in user's CLAUDE.md
+7. **Magic Numbers** - Extract to named constants at module level
+8. **Complex Exception Handling** - Use helper functions for error raising
+9. **Subprocess Security** - Always use targeted noqa for legitimate calls
+10. **Exception Chaining** - Always use `from e` when re-raising exceptions
 
 ### Black/Ruff Interaction: Handling Long Lines with `# noqa`
 
@@ -172,11 +296,14 @@ All Python files should use the copyright header with the current year:
 
 ## Git Practices
 
-- NEVER use `--no-verify` flag with git commands unless explicitly
-  instructed to do so
+- **CRITICAL: NEVER use `--no-verify` flag with git commands**
+  - This bypasses all pre-commit hooks and linting checks
+  - All linting errors MUST be fixed before committing
+  - If pre-commit fails, fix the errors, don't bypass them
 - Always fix linting issues before committing code
 - Run pre-commit hooks manually with `poetry run pre-commit run` before committing
 - Address all linting issues rather than bypassing the checks
+- Use the systematic linting error fixing strategy outlined above
 
 ## CI/CD Workflow
 

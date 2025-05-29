@@ -62,7 +62,7 @@ def serve_api(host: str, port: int, *, reload: bool) -> None:
 
     console.print(f"🔥 Starting FastAPI server on {host}:{port}")
     uvicorn.run(
-        "ff_docs.server:app",
+        "ff_docs.server.main:app",
         host=host,
         port=port,
         reload=reload,
