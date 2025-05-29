@@ -1,0 +1,113 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: ['--allow-multiple-documents']
+        exclude: ^mkdocs\.yml$  # MkDocs uses Python-specific YAML tags
+      - id: check-added-large-files
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-json
+      - id: check-toml
+      - id: debug-statements
+      - id: requirements-txt-fixer
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.11
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.15.0
+    hooks:
+      - id: mypy
+        additional_dependencies:
+          - types-PyYAML
+          - types-requests
+          - types-aiofiles
+          - pydantic
+          - aiofiles
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
+      - id: markdownlint
+        args: ['--fix']
+        files: \.(md|markdown)$
+
+  - repo: local
+    hooks:
+      - id: mkdocs-validation
+        name: MkDocs validation
+        entry: bash -c 'if [ -f mkdocs.yml ]; then poetry run mkdocs build --strict --quiet; fi'
+        language: system
+        files: ^(mkdocs\.yml|docs/.*)$
+        pass_filenames: false
+
+      # - id: copyright-header
+      #   name: Copyright header check
+      #   entry: python scripts/check_copyright.py
+      #   language: python
+      #   files: \.py$
+      #   pass_filenames: true
+
+      # - id: no-print-statements
+      #   name: Check for print statements in production code
+      #   entry: >
+      #     bash -c 'if grep -r "print(" src/ --include="*.py" |
+      #     grep -v "# dev-print-ok"; then echo "Found print statements
+      #     in production code. Use logging instead."; exit 1; fi'
+      #   language: system
+      #   files: ^src/.*\.py$
+      #   pass_filenames: false
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.5
+    hooks:
+      - id: forbid-crlf
+      - id: remove-crlf
+      - id: forbid-tabs
+      - id: remove-tabs
+
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 25.1.0
+    hooks:
+      - id: black
+        language_version: python3.13
+
+  - repo: https://github.com/pycqa/isort
+    rev: 6.0.1
+    hooks:
+      - id: isort
+        args: ["--profile", "black", "--filter-files"]
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+        args: [-c=.yamllint.yaml]
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.11
+    hooks:
+      - id: ruff
+        name: ruff-security
+        args: [--select, S]
+        files: ^src/
+
+ci:
+  autofix_commit_msg: |
+    [pre-commit.ci] auto fixes from pre-commit.com hooks
+
+    for more information, see https://pre-commit.ci
+  autofix_prs: true
+  autoupdate_branch: ''
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_schedule: weekly
+  skip: []
+  submodules: false

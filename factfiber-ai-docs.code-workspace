@@ -1,0 +1,139 @@
+{
+  "folders": [
+    {
+      "name": "factfiber-ai-docs",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "python.defaultInterpreterPath": ".venv/bin/python",
+    "python.terminal.activateEnvironment": true,
+    "terminal.integrated.env.osx": {
+      "PYTHONPATH": "${workspaceFolder}/src"
+    },
+    "terminal.integrated.env.linux": {
+      "PYTHONPATH": "${workspaceFolder}/src"
+    },
+    "terminal.integrated.env.windows": {
+      "PYTHONPATH": "${workspaceFolder}/src"
+    }
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Install Dependencies",
+        "type": "shell",
+        "command": "poetry install --extras dev",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Run Tests",
+        "type": "shell",
+        "command": "poetry run pytest tests/ -v",
+        "group": "test",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Run Pre-commit",
+        "type": "shell",
+        "command": "poetry run pre-commit run --all-files",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Start Development Server",
+        "type": "shell",
+        "command": "poetry run ff-docs serve --reload",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "Build Documentation",
+        "type": "shell",
+        "command": "poetry run ff-docs build",
+        "group": "build",
+        "presentation": {
+          "echo": true,
+          "reveal": "always",
+          "focus": false,
+          "panel": "shared"
+        },
+        "problemMatcher": []
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "FastAPI Server",
+        "type": "python",
+        "request": "launch",
+        "program": "${workspaceFolder}/src/ff_docs/cli.py",
+        "args": ["serve", "--reload"],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/src"
+        }
+      },
+      {
+        "name": "Run Tests",
+        "type": "python",
+        "request": "launch",
+        "module": "pytest",
+        "args": ["tests/", "-v"],
+        "console": "integratedTerminal",
+        "cwd": "${workspaceFolder}",
+        "env": {
+          "PYTHONPATH": "${workspaceFolder}/src"
+        }
+      }
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.black-formatter",
+      "charliermarsh.ruff",
+      "ms-python.mypy-type-checker",
+      "tamasfe.even-better-toml",
+      "redhat.vscode-yaml",
+      "DavidAnson.vscode-markdownlint",
+      "streetsidesoftware.code-spell-checker",
+      "ms-vscode.vscode-json",
+      "bierner.markdown-mermaid",
+      "shd101wyy.markdown-preview-enhanced",
+      "ms-kubernetes-tools.vscode-kubernetes-tools",
+      "ms-vscode-remote.remote-containers",
+      "github.vscode-pull-request-github",
+      "eamodio.gitlens"
+    ]
+  }
+}

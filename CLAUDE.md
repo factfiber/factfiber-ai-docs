@@ -1,0 +1,227 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working
+with code in this repository.
+
+## Current Working State
+
+**IMPORTANT**: Check `tmp/issues/CLAUDE.md` for the current state of
+active issues and development progress. This file tracks:
+
+- Active issues being worked on
+- Current development session focus
+- Next steps and priorities
+- Files under investigation
+
+## Project Overview
+
+This is a Python-based documentation infrastructure project for
+FactFiber.ai, focused on building a centralized multi-repository
+documentation system using MkDocs. The project includes configuration,
+deployment scripts, and templates for managing documentation across
+multiple repositories.
+
+## Development Commands
+
+**ALWAYS USE POETRY FOR RUNNING COMMANDS AND INSTALLING PACKAGES**
+when poetry.lock/pyproject.toml exists:
+
+- Install dependencies: `poetry install`
+- Add dependency: `poetry add package-name`
+- Run development server: `poetry run mkdocs serve`
+- Build documentation: `poetry run mkdocs build`
+- Test: `poetry run pytest tests/ -v`
+- Single test: `poetry run pytest tests/path/to/test_file.py::test_function -v`
+
+## Linting and Formatting
+
+- **ALWAYS run pre-commit for full linting**: `poetry run pre-commit run --all-files`
+- For checking specific files only: `poetry run pre-commit run --files path/to/file.py`
+- Individual linters (use pre-commit instead when possible):
+  - Ruff check: `poetry run ruff check path/to/file.py`
+  - Ruff format: `poetry run ruff format path/to/file.py`
+  - Type check: `poetry run mypy src/`
+
+### Black/Ruff Interaction: Handling Long Lines with `# noqa`
+
+**CRITICAL**: When Black reformats long lines, `# noqa` comments must be
+placed on the FIRST line of the reformatted statement.
+
+```python
+# WRONG - noqa on the wrong line after Black reformats
+print(
+    f"Very long message that exceeds 80 characters and gets reformatted"
+)  # noqa: T201  ← This won't work!
+
+# CORRECT - noqa on the first line
+print(  # noqa: T201
+    f"Very long message that exceeds 80 characters and gets reformatted"
+)
+
+# WRONG - noqa misplaced on function definition
+def some_function(  # noqa: ARG001
+    unused_param: str, other_param: int
+) -> None:
+    pass
+
+# CORRECT - noqa on the line with the unused parameter
+def some_function(
+    unused_param: str,  # noqa: ARG001
+    other_param: int,
+) -> None:
+    pass
+
+# WRONG - noqa after Black reformats variable assignment
+very_long_variable_name = some_very_long_function_call(
+    arg1, arg2, arg3
+)  # noqa: F841  ← Won't work after Black reformatting
+
+# CORRECT - noqa on the first line
+very_long_variable_name = some_very_long_function_call(  # noqa: F841
+    arg1, arg2, arg3
+)
+```
+
+## Code Style Guidelines
+
+### Line Length
+
+- **Maximum line length: 80 characters**
+- For long docstrings: Use shorter, more concise descriptions
+- For long comments: Break into multiple lines or use temporary variables
+- For long function calls: Use temporary variables for clarity
+
+### Copyright Header
+
+All Python files should use the copyright header with the current year:
+
+```python
+# Copyright 2025 Fact Fiber Inc. All rights reserved.
+```
+
+### Style Guidelines
+
+- Line length: 80 characters
+- Quotes: Double quotes
+- No trailing spaces
+- Docstring style: Google. Docstrings should start with a new-line
+- Imports: Use `from module import function` format, sort with\n  `isort`
+- **Types: Type annotations are REQUIRED on ALL function signatures**
+  - Use Python 3.13+ typing syntax
+  - All parameters and return values must be typed
+  - Never skip type annotations even for "simple" or "temporary" functions
+- Error handling: Use explicit exceptions with messages
+- Naming: snake_case for functions/variables, PascalCase for classes
+- **NEVER DISABLE CODE COMPLEXITY LINTERS** - instead, break down complex
+  functions into smaller, more focused functions
+
+### Function Complexity (PLR0913)
+
+- **Maximum arguments per function: 5**
+- For functions with more than 5 arguments, use `# noqa: PLR0913` only when justified
+- Consider dataclasses for complex parameter groups
+- Use keyword-only arguments with `*` separator for clarity
+
+### Boolean Arguments (FBT001, FBT002)
+
+- **Avoid positional boolean arguments**
+- Use keyword-only arguments with `*` separator
+
+### Exception Handling (BLE001)
+
+- **Never catch bare `Exception`**
+- Catch specific exception types
+
+### Test Best Practices
+
+- **Use assertions, not skips, for test setup validation**
+- **ALWAYS seed random functions**: All random operations in tests MUST use
+  explicit seeds for determinism
+- **⚠️ NEVER MASK TEST FAILURES ⚠️**: Do NOT use `assert True` or other
+  mechanisms to artificially pass failing tests
+- **Break down complex tests**: Extract setup, execution, and verification
+  into separate helper functions
+- **Bug Reproduction Tests**: When looking for a bug, write tests that
+  **FAIL** when the bug is present and **PASS** when the bug is fixed
+
+### Type Annotations
+
+- Use nptyping for numpy array types when applicable:
+
+  ```python
+  from nptyping import Int32, Float64, NDArray
+  ```
+
+- For dictionaries, always specify key and value types:
+
+  ```python
+  indices_map: dict[int, list[int]] = {}
+  ```
+
+- **Use dataclasses where appropriate**: For complex data structures,
+  especially in test code, prefer dataclasses over manually defined classes
+
+## Environment Variables
+
+### Defining Environment Variables
+
+- **All environment variable names should be defined as constants in a
+  constants module**
+- Use the `ENV_` prefix for environment variable constants
+- Always import from constants module instead of hardcoding strings
+
+## Git Practices
+
+- NEVER use `--no-verify` flag with git commands unless explicitly
+  instructed to do so
+- Always fix linting issues before committing code
+- Run pre-commit hooks manually with `poetry run pre-commit run` before committing
+- Address all linting issues rather than bypassing the checks
+
+## CI/CD Workflow
+
+- Before committing, always run:
+  1. Tests: `poetry run pytest tests/`
+  2. Linting: `poetry run pre-commit run --all-files`
+- Git commits:
+  - Use commitizen-style messages: `feat:`, `fix:`, `docs:`, `style:`, etc.
+  - Ensure all code follows company copyright guidelines
+
+## Project Architecture
+
+This documentation infrastructure project follows these patterns:
+
+### Configuration Management
+
+- Use YAML configuration files for MkDocs and deployment settings
+- Template-based configuration generation for consistency across repositories
+- Environment-specific configuration profiles (development, staging, production)
+
+### Repository Integration
+
+- Multi-repository documentation aggregation using mkdocs-multirepo-plugin
+- Automated synchronization from source repositories
+- Git submodules or API-based content fetching strategies
+
+### Deployment and CI/CD
+
+- GitHub Actions workflows for automated builds and deployments
+- Kubernetes deployment with DevSpace for development workflow
+- Docker containerization for consistent environments
+- Integration with OAuth2-Proxy for authentication
+
+### Key Components
+
+- `mkdocs.yml`: Main MkDocs configuration
+- `templates/`: Reusable configuration templates
+- `scripts/`: Automation scripts for repository enrollment and management
+- `kubernetes/`: Kubernetes manifests and Helm charts
+- `.github/workflows/`: CI/CD pipeline definitions
+
+## Documentation Standards
+
+- Follow Material for MkDocs conventions
+- Use Markdown with extensions for enhanced formatting
+- Include mathematical notation support via KaTeX
+- Support for diagrams using Mermaid and PlantUML
+- Maintain consistent navigation structure across all documentation

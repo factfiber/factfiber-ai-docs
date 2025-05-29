@@ -1,0 +1,32 @@
+extends: default
+
+rules:
+  # Allow longer lines for readability
+  line-length:
+    max: 120
+    level: warning
+
+  # Allow multiple documents in single file (common for k8s manifests)
+  document-start:
+    present: false
+
+  # Allow truthy values (useful for boolean flags)
+  truthy:
+    allowed-values: ['true', 'false', 'yes', 'no', 'on', 'off']
+    check-keys: false
+
+  # Disable indentation check for sequences (too strict for our use case)
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+
+  # Allow empty values (useful for environment variables)
+  empty-values:
+    forbid-in-block-mappings: false
+    forbid-in-flow-mappings: false
+
+  # Comments can have different indentation
+  comments-indentation: disable
+
+  # Allow key duplicates (sometimes needed for overrides)
+  key-duplicates: disable
