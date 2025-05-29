@@ -5,6 +5,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from ff_docs.auth.repository_middleware import RepositoryScopedAuthMiddleware
 from ff_docs.config.settings import settings
 
 
@@ -26,10 +27,14 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # Add repository-scoped authentication middleware
+    app.add_middleware(RepositoryScopedAuthMiddleware)
+
     # Include routers
-    from ff_docs.server.routes import docs, health, repos
+    from ff_docs.server.routes import auth, docs, health, repos
 
     app.include_router(health.router, prefix="/health", tags=["health"])
+    app.include_router(auth.router, prefix="/auth", tags=["authentication"])
     app.include_router(docs.router, prefix="/docs", tags=["documentation"])
     app.include_router(repos.router, prefix="/repos", tags=["repositories"])
 

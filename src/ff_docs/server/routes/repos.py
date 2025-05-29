@@ -5,11 +5,16 @@
 import logging
 from typing import Annotated, Any
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from ff_docs.aggregator.enrollment import RepositoryEnrollment
 from ff_docs.aggregator.github_client import RepositoryAggregator
+from ff_docs.auth.middleware import (
+    get_current_user,
+    require_permission,
+)
+from ff_docs.auth.models import UserSession
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -116,6 +121,7 @@ async def list_repositories() -> RepositoryListResponse:
 
 @router.get("/discover")  # type: ignore[misc]
 async def discover_repositories(
+    _: Annotated[UserSession, Depends(get_current_user)],
     org: Annotated[
         str | None, Query(description="GitHub organization name")
     ] = None,
@@ -156,6 +162,7 @@ async def discover_repositories(
 @router.post("/enroll")  # type: ignore[misc]
 async def enroll_repository(
     request: EnrollRepositoryRequest,
+    _: Annotated[UserSession, Depends(require_permission(["repos:manage"]))],
 ) -> EnrollRepositoryResponse:
     """Enroll a repository in the documentation system."""
     try:
@@ -188,6 +195,7 @@ async def enroll_repository(
 @router.delete("/unenroll")  # type: ignore[misc]
 async def unenroll_repository(
     request: UnenrollRepositoryRequest,
+    _: Annotated[UserSession, Depends(require_permission(["repos:manage"]))],
 ) -> dict[str, Any]:
     """Remove a repository from the documentation system."""
     try:
@@ -222,6 +230,7 @@ async def unenroll_repository(
 
 @router.post("/enroll-all")  # type: ignore[misc]
 async def enroll_all_repositories(
+    _: Annotated[UserSession, Depends(require_permission(["repos:manage"]))],
     org: Annotated[
         str | None, Query(description="GitHub organization name")
     ] = None,

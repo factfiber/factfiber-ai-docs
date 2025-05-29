@@ -46,13 +46,14 @@ dependencies = [
     # GitHub integration
     "PyGithub>=1.59.0",
     "requests>=2.31.0",
+    "httpx>=0.25.0",
 
     # YAML processing
     "PyYAML>=6.0",
     "ruamel.yaml>=0.18.0",
 
     # Authentication and security
-    "python-jose[cryptography]>=3.3.0",
+    "pyjwt[cryptography]>=2.8.0",
     "passlib[bcrypt]>=1.7.4",
 
     # Monitoring and observability

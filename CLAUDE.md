@@ -5,6 +5,39 @@ with code in this repository.
 
 ## Current Working State
 
+### Sprint 4: Authentication & Security - COMPLETED ✅
+
+Successfully implemented comprehensive authentication and security system:
+
+✅ **Completed in Sprint 4:**
+
+- JWT authentication system with secure token handling
+- GitHub OAuth integration for user authentication
+- OAuth2-Proxy integration for enterprise deployments
+- Role-based access control (RBAC) with team-based permissions
+- Comprehensive authentication middleware for FastAPI
+- Secured API endpoints with permission-based access control
+- Authentication routes (/auth/login, /auth/me, /auth/status, etc.)
+
+**Authentication Methods:**
+
+- `JWT` - JSON Web Token authentication for API access
+- `OAuth2-Proxy` - Enterprise GitHub OAuth integration
+- `GitHub API` - Direct GitHub token authentication
+
+**Permission System:**
+
+- Team-based permissions: admin-team, platform-team, docs-team, etc.
+- Resource-level access control: docs:read, docs:write, repos:manage
+- Repository-specific access validation
+
+**Security Features:**
+
+- Secure JWT token generation and validation
+- GitHub team membership verification
+- Request-level authentication middleware
+- CORS configuration for web client integration
+
 ### Sprint 3: FastAPI Integration - COMPLETED ✅
 
 Successfully implemented comprehensive REST API for repository management:
@@ -35,13 +68,21 @@ Successfully implemented comprehensive REST API for repository management:
 
 ```bash
 # Start FastAPI server
-poetry run ff-docs serve-api --port 8002
+poetry run ff-docs serve-api --port 8003
 
-# Test endpoints
-curl http://localhost:8002/health/
-curl http://localhost:8002/repos/config
-curl http://localhost:8002/repos/
+# Test public endpoints
+curl http://localhost:8003/health/
+curl http://localhost:8003/auth/status
+
+# Test protected endpoints (requires authentication)
+curl http://localhost:8003/repos/discover
+# Returns: {"detail":"Authentication required"}
+
+# API documentation
+open http://localhost:8003/docs
 ```
+
+**Next Phase:** Production deployment with OAuth2-Proxy integration
 
 ## Project Overview
 
@@ -312,6 +353,11 @@ All Python files should use the copyright header with the current year:
   2. Linting: `poetry run pre-commit run --all-files`
 - Git commits:
   - Use commitizen-style messages: `feat:`, `fix:`, `docs:`, `style:`, etc.
+  - **🚫 CRITICAL: NO AI ATTRIBUTIONS IN COMMIT MESSAGES 🚫**
+    - **NEVER include Claude attribution, co-author tags, or any AI-generated markers**
+    - This is a strict company copyright policy requirement
+    - All commit messages must appear as human-authored
+    - Violating this policy can create legal and intellectual property issues
   - Ensure all code follows company copyright guidelines
 
 ## Project Architecture
