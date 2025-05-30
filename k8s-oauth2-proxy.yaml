@@ -1,0 +1,410 @@
+# Kubernetes deployment for OAuth2-Proxy with FactFiber.ai docs repository-scoped authentication
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ff-docs
+  labels:
+    name: ff-docs
+    purpose: documentation-infrastructure
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oauth2-proxy-secrets
+  namespace: ff-docs
+type: Opaque
+data:
+  # Base64 encoded values - replace with your actual encoded secrets
+  # Generate client-secret: echo -n "your_client_secret" | base64
+  # Generate cookie-secret: openssl rand -base64 32 | tr -d '\n' | base64
+  client-id: "eW91cl9naXRodWJfb2F1dGhfY2xpZW50X2lkX2hlcmU="  # Replace with base64 encoded GitHub OAuth Client ID
+  client-secret: "eW91cl9naXRodWJfb2F1dGhfY2xpZW50X3NlY3JldF9oZXJl"  # Replace with base64 encoded GitHub OAuth Client Secret
+  cookie-secret: "eW91cl8zMl9ieXRlX2Jhc2U2NF9lbmNvZGVkX3NlY3JldF9oZXJl"  # Replace with base64 encoded cookie secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: github-secrets
+  namespace: ff-docs
+type: Opaque
+data:
+  # Base64 encoded GitHub Personal Access Token
+  github-token: "Z2hwX3lvdXJfZ2l0aHViX3BlcnNvbmFsX2FjY2Vzc190b2tlbl9oZXJl"  # Replace with base64 encoded GitHub token
+  jwt-secret: "eW91cl9qd3Rfc2VjcmV0X2tleV9mb3JfZmFsbGJhY2tfYXV0aA=="  # Replace with base64 encoded JWT secret
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oauth2-proxy-config
+  namespace: ff-docs
+data:
+  oauth2_proxy.cfg: |
+    # OAuth2-Proxy configuration for production deployment
+    http_address = "0.0.0.0:4180"
+    upstreams = [ "http://ff-docs-api-service:8000" ]
+
+    # Provider configuration
+    provider = "github"
+    scope = "user:email read:org repo"
+
+    # GitHub organization
+    github_org = "factfiber-ai"  # Replace with your organization
+
+    # Cookie configuration
+    cookie_name = "_ff_docs_oauth2_proxy"
+    cookie_secure = true
+    cookie_httponly = true
+    cookie_samesite = "lax"
+    cookie_expire = "24h"
+    cookie_refresh = "1h"
+    cookie_domains = [".yourdomain.com"]  # Replace with your domain
+
+    # Headers configuration for repository-scoped auth
+    set_xauthrequest = true
+    pass_access_token = true
+    pass_host_header = true
+
+    # Authentication configuration
+    email_domains = ["*"]
+
+    # Skip authentication for health endpoints
+    skip_auth_regex = [
+      "^/health/?$",
+      "^/auth/status/?$",
+      "^/docs/?$",
+      "^/openapi.json$"
+    ]
+
+    # Security headers
+    set_authorization_header = false
+    pass_basic_auth = false
+
+    # Logging
+    request_logging = true
+    standard_logging = true
+    auth_logging = true
+
+    # Timeouts
+    upstream_timeout = "30s"
+    flush_interval = "1s"
+
+    # Security
+    ssl_insecure_skip_verify = false
+    force_https = true
+
+    # Monitoring
+    metrics_address = "0.0.0.0:8080"
+    ping_path = "/ping"
+    ready_path = "/ready"
+
+    # Custom branding
+    banner = "FactFiber.ai Documentation Access"
+    footer = "Powered by OAuth2-Proxy"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  namespace: ff-docs
+  labels:
+    app: oauth2-proxy
+    component: authentication
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: oauth2-proxy
+  template:
+    metadata:
+      labels:
+        app: oauth2-proxy
+        component: authentication
+    spec:
+      containers:
+      - name: oauth2-proxy
+        image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+        args:
+        - --config=/etc/oauth2-proxy/oauth2_proxy.cfg
+        ports:
+        - containerPort: 4180
+          name: http
+          protocol: TCP
+        - containerPort: 8080
+          name: metrics
+          protocol: TCP
+        env:
+        - name: OAUTH2_PROXY_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-proxy-secrets
+              key: client-id
+        - name: OAUTH2_PROXY_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-proxy-secrets
+              key: client-secret
+        - name: OAUTH2_PROXY_COOKIE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-proxy-secrets
+              key: cookie-secret
+        volumeMounts:
+        - name: oauth2-proxy-config
+          mountPath: /etc/oauth2-proxy
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: 4180
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 4180
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          runAsNonRoot: true
+          runAsUser: 65532
+          capabilities:
+            drop:
+            - ALL
+      volumes:
+      - name: oauth2-proxy-config
+        configMap:
+          name: oauth2-proxy-config
+      securityContext:
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth2-proxy-service
+  namespace: ff-docs
+  labels:
+    app: oauth2-proxy
+spec:
+  type: ClusterIP
+  ports:
+  - port: 4180
+    targetPort: 4180
+    protocol: TCP
+    name: http
+  - port: 8080
+    targetPort: 8080
+    protocol: TCP
+    name: metrics
+  selector:
+    app: oauth2-proxy
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ff-docs-api
+  namespace: ff-docs
+  labels:
+    app: ff-docs-api
+    component: api-server
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ff-docs-api
+  template:
+    metadata:
+      labels:
+        app: ff-docs-api
+        component: api-server
+    spec:
+      containers:
+      - name: ff-docs-api
+        image: ff-docs:latest  # Replace with your container registry
+        command: ["poetry", "run", "ff-docs", "serve-api"]
+        args: ["--host", "0.0.0.0", "--port", "8000"]
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        env:
+        # Authentication configuration
+        - name: AUTH_OAUTH2_PROXY_ENABLED
+          value: "true"
+        - name: AUTH_OAUTH2_PROXY_USER_HEADER
+          value: "X-Auth-Request-User"
+        - name: AUTH_OAUTH2_PROXY_EMAIL_HEADER
+          value: "X-Auth-Request-Email"
+        - name: AUTH_OAUTH2_PROXY_GROUPS_HEADER
+          value: "X-Forwarded-Groups"
+
+        # GitHub configuration
+        - name: GITHUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: github-secrets
+              key: github-token
+        - name: GITHUB_ORG
+          value: "factfiber-ai"  # Replace with your organization
+
+        # Server configuration
+        - name: SERVER_HOST
+          value: "0.0.0.0"
+        - name: SERVER_PORT
+          value: "8000"
+        - name: SERVER_CORS_ORIGINS
+          value: '["https://yourdomain.com"]'  # Replace with your domain
+
+        # JWT configuration (fallback)
+        - name: AUTH_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: github-secrets
+              key: jwt-secret
+        - name: AUTH_ALGORITHM
+          value: "HS256"
+        - name: AUTH_ACCESS_TOKEN_EXPIRE_MINUTES
+          value: "30"
+
+        livenessProbe:
+          httpGet:
+            path: /health/
+            port: 8000
+          initialDelaySeconds: 30
+          timeoutSeconds: 5
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health/
+            port: 8000
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        securityContext:
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: false  # Need write access for temp files
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop:
+            - ALL
+      securityContext:
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ff-docs-api-service
+  namespace: ff-docs
+  labels:
+    app: ff-docs-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    protocol: TCP
+    name: http
+  selector:
+    app: ff-docs-api
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ff-docs-ingress
+  namespace: ff-docs
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"  # If using cert-manager
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-buffer-size: "8k"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    # Repository-scoped authentication headers
+    nginx.ingress.kubernetes.io/auth-url: "https://yourdomain.com/oauth2/auth"
+    nginx.ingress.kubernetes.io/auth-signin: "https://yourdomain.com/oauth2/start?rd=$escaped_request_uri"
+    nginx.ingress.kubernetes.io/auth-response-headers: "X-Auth-Request-User,X-Auth-Request-Email,X-Forwarded-Groups,X-Auth-Request-Access-Token"
+spec:
+  tls:
+  - hosts:
+    - yourdomain.com  # Replace with your domain
+    secretName: ff-docs-tls
+  rules:
+  - host: yourdomain.com  # Replace with your domain
+    http:
+      paths:
+      # OAuth2-Proxy authentication endpoints
+      - path: /oauth2
+        pathType: Prefix
+        backend:
+          service:
+            name: oauth2-proxy-service
+            port:
+              number: 4180
+      # All other requests go through OAuth2-Proxy to FF-Docs API
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: oauth2-proxy-service
+            port:
+              number: 4180
+---
+apiVersion: v1
+kind: ServiceMonitor
+metadata:
+  name: oauth2-proxy-metrics
+  namespace: ff-docs
+  labels:
+    app: oauth2-proxy
+spec:
+  selector:
+    matchLabels:
+      app: oauth2-proxy
+  endpoints:
+  - port: metrics
+    path: /metrics
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: oauth2-proxy-pdb
+  namespace: ff-docs
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: oauth2-proxy
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ff-docs-api-pdb
+  namespace: ff-docs
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ff-docs-api

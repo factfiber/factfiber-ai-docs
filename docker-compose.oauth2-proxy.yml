@@ -1,0 +1,158 @@
+# Docker Compose configuration for OAuth2-Proxy with FF-Docs
+# This sets up OAuth2-Proxy for repository-scoped authentication testing
+
+version: '3.8'
+
+services:
+  # OAuth2-Proxy service
+  oauth2-proxy:
+    image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+    container_name: ff-docs-oauth2-proxy
+    command:
+      - --config=/etc/oauth2-proxy/oauth2-proxy.cfg
+    ports:
+      - "4180:4180"  # OAuth2-Proxy main port
+      - "8080:8080"  # Metrics port
+    volumes:
+      - ./oauth2-proxy-config.yaml:/etc/oauth2-proxy/oauth2-proxy.cfg:ro
+      - ./templates:/templates:ro  # Optional custom templates
+    environment:
+      # GitHub OAuth Application credentials
+      # Create these at: https://github.com/settings/applications/new
+      OAUTH2_PROXY_CLIENT_ID: "${GITHUB_OAUTH_CLIENT_ID}"
+      OAUTH2_PROXY_CLIENT_SECRET: "${GITHUB_OAUTH_CLIENT_SECRET}"
+
+      # Cookie encryption secret (generate with: openssl rand -base64 32)
+      OAUTH2_PROXY_COOKIE_SECRET: "${OAUTH2_PROXY_COOKIE_SECRET}"
+
+      # GitHub organization configuration
+      OAUTH2_PROXY_GITHUB_ORG: "${GITHUB_ORG:-factfiber-ai}"
+
+      # Optional: restrict to specific team
+      # OAUTH2_PROXY_GITHUB_TEAM: "docs-team"
+
+      # Logging configuration
+      OAUTH2_PROXY_LOG_LEVEL: "info"
+      OAUTH2_PROXY_LOG_FORMAT: "json"
+
+      # Development settings
+      OAUTH2_PROXY_COOKIE_SECURE: "false"  # Set to true in production with HTTPS
+      OAUTH2_PROXY_FORCE_HTTPS: "false"    # Set to true in production
+
+      # Provider configuration
+      OAUTH2_PROXY_PROVIDER: "github"
+      OAUTH2_PROXY_SCOPE: "user:email read:org repo"
+
+      # Upstream configuration
+      OAUTH2_PROXY_UPSTREAMS: "http://ff-docs-api:8000"
+
+      # Headers configuration
+      OAUTH2_PROXY_SET_XAUTHREQUEST: "true"
+      OAUTH2_PROXY_PASS_ACCESS_TOKEN: "true"
+      OAUTH2_PROXY_PASS_HOST_HEADER: "true"
+
+      # Session configuration
+      OAUTH2_PROXY_SESSION_STORE_TYPE: "cookie"
+      OAUTH2_PROXY_COOKIE_EXPIRE: "24h"
+      OAUTH2_PROXY_COOKIE_REFRESH: "1h"
+
+      # Skip authentication for health endpoints
+      OAUTH2_PROXY_SKIP_AUTH_REGEX: "^/(health|auth/status|docs|openapi.json)/?$"
+
+      # Email domain (allow all since GitHub handles org membership)
+      OAUTH2_PROXY_EMAIL_DOMAINS: "*"
+
+      # Custom branding
+      OAUTH2_PROXY_BANNER: "FactFiber.ai Documentation Access"
+      OAUTH2_PROXY_FOOTER: "Powered by OAuth2-Proxy"
+
+      # Request timeouts
+      OAUTH2_PROXY_UPSTREAM_TIMEOUT: "30s"
+      OAUTH2_PROXY_FLUSH_INTERVAL: "1s"
+
+      # Headers passed to upstream
+      OAUTH2_PROXY_SET_AUTHORIZATION_HEADER: "false"
+      OAUTH2_PROXY_PASS_BASIC_AUTH: "false"
+
+    networks:
+      - ff-docs-network
+    depends_on:
+      - ff-docs-api
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:4180/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # FF-Docs API service
+  ff-docs-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ff-docs-api
+    command: poetry run ff-docs serve-api --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"  # Direct API access (for development)
+    volumes:
+      - .:/app
+      - ~/.gitconfig:/root/.gitconfig:ro  # Git configuration
+      - ~/.ssh:/root/.ssh:ro  # SSH keys for Git operations
+    environment:
+      # Authentication configuration
+      AUTH_OAUTH2_PROXY_ENABLED: "true"
+      AUTH_OAUTH2_PROXY_USER_HEADER: "X-Auth-Request-User"
+      AUTH_OAUTH2_PROXY_EMAIL_HEADER: "X-Auth-Request-Email"
+      AUTH_OAUTH2_PROXY_GROUPS_HEADER: "X-Forwarded-Groups"
+
+      # GitHub configuration
+      GITHUB_TOKEN: "${GITHUB_TOKEN}"  # Personal access token
+      GITHUB_ORG: "${GITHUB_ORG:-factfiber-ai}"
+
+      # Server configuration
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PORT: "8000"
+      SERVER_CORS_ORIGINS: '["http://localhost:4180", "http://localhost:3000"]'
+
+      # JWT configuration (for fallback authentication)
+      AUTH_SECRET_KEY: "${JWT_SECRET_KEY}"
+      AUTH_ALGORITHM: "HS256"
+      AUTH_ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+
+      # Development settings
+      SERVER_RELOAD: "true"
+
+    networks:
+      - ff-docs-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # Redis for session storage (optional, for production)
+  redis:
+    image: redis:7-alpine
+    container_name: ff-docs-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - ff-docs-network
+    restart: unless-stopped
+    profiles:
+      - redis  # Only start with --profile redis
+
+networks:
+  ff-docs-network:
+    driver: bridge
+    name: ff-docs-network
+
+volumes:
+  redis_data:
+    driver: local

@@ -165,8 +165,13 @@ class OAuth2ProxyHandler:
     def extract_access_token(self, request: Request) -> str | None:
         """Extract GitHub access token from OAuth2-Proxy headers."""
         # OAuth2-Proxy can pass through the original access token
-        access_token_header = "X-Auth-Request-Access-Token"  # noqa: S105
-        return request.headers.get(access_token_header)
+        access_token_header = (
+            self.settings.auth.oauth2_proxy_access_token_header
+        )
+        token = request.headers.get(access_token_header)
+        if token and token.strip():
+            return token.strip()
+        return None
 
     def get_user_info_from_headers(self, request: Request) -> dict[str, Any]:
         """Extract all available user information from headers."""

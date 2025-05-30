@@ -141,16 +141,33 @@ class RepositoryScopedAuthMiddleware(BaseHTTPMiddleware):
 
     def _get_access_token_from_request(self, request: Request) -> str | None:
         """Extract GitHub access token from request headers."""
-        # Try OAuth2-Proxy access token header
+        # Try OAuth2-Proxy access token header (most common in production)
         access_token = request.headers.get("X-Auth-Request-Access-Token")
-        if access_token:
-            return access_token
+        if access_token and access_token.strip():
+            logger.debug("Found access token from OAuth2-Proxy header")
+            return access_token.strip()
 
         # Try Authorization header (for direct JWT/GitHub token auth)
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
-            return auth_header[7:]  # Remove "Bearer " prefix
+            token = auth_header[7:]  # Remove "Bearer " prefix
+            logger.debug("Found access token from Authorization header")
+            return token
 
+        # Try alternative OAuth2-Proxy headers
+        alt_headers = [
+            "X-Forwarded-Access-Token",
+            "X-Auth-Access-Token",
+            "X-Access-Token",
+        ]
+
+        for header in alt_headers:
+            token = request.headers.get(header)
+            if token and token.strip():
+                logger.debug("Found access token from header: %s", header)
+                return token.strip()
+
+        logger.debug("No access token found in request headers")
         return None
 
     async def _validate_repository_access(

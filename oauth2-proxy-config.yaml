@@ -1,0 +1,157 @@
+# OAuth2-Proxy configuration for FactFiber.ai docs repository-scoped authentication
+# This file configures OAuth2-Proxy to provide GitHub OAuth authentication
+# with repository-specific access control
+
+# Server configuration
+http_address: "0.0.0.0:4180"
+https_address: ""
+tls_cert_file: ""
+tls_private_key_file: ""
+
+# Provider configuration - GitHub OAuth
+provider: "github"
+github_org: "factfiber-ai"  # Replace with your GitHub organization
+github_team: ""  # Leave empty to allow all org members
+github_repo: ""  # Leave empty to allow access based on repo permissions
+
+# OAuth Application credentials (set via environment variables)
+# OAUTH2_PROXY_CLIENT_ID: GitHub OAuth App Client ID
+# OAUTH2_PROXY_CLIENT_SECRET: GitHub OAuth App Client Secret
+# OAUTH2_PROXY_COOKIE_SECRET: Random 32-byte secret for cookie encryption
+
+# Upstream configuration - FF-Docs API server
+upstreams:
+  - "http://ff-docs-api:8000"  # Internal service name for ff-docs API
+
+# Cookie and session configuration
+cookie_name: "_ff_docs_oauth2_proxy"
+cookie_secure: true  # Set to false for HTTP (development only)
+cookie_httponly: true
+cookie_samesite: "lax"
+cookie_expire: "24h"
+cookie_refresh: "1h"
+
+# Request headers passed to upstream
+set_xauthrequest: true
+pass_basic_auth: false
+pass_access_token: true  # Pass GitHub access token to upstream
+pass_host_header: true
+
+# Header configuration for repository-scoped authentication
+headers:
+  X-Auth-Request-User: "{{ .User }}"
+  X-Auth-Request-Email: "{{ .Email }}"
+  X-Auth-Request-Groups: "{{ range .Groups }}{{ . }},{{ end }}"
+  X-Auth-Request-Access-Token: "{{ .AccessToken }}"
+  X-Forwarded-User: "{{ .User }}"
+  X-Forwarded-Email: "{{ .Email }}"
+  X-Forwarded-Groups: "{{ range .Groups }}{{ . }},{{ end }}"
+
+# Authentication configuration
+email_domains:
+  - "*"  # Allow any email domain (GitHub handles org membership)
+
+# Scope configuration - request repository access
+scope: "user:email read:org repo"
+
+# Skip authentication for specific paths
+skip_auth_regex:
+  - "^/health/?$"
+  - "^/auth/status/?$"
+  - "^/docs/?$"
+  - "^/openapi.json$"
+
+# Skip provider specific paths that don't need authentication
+skip_provider_button: false
+
+# Logging configuration
+logging:
+  level: "info"
+  format: "json"
+
+# Security headers
+response_headers:
+  X-Frame-Options: "DENY"
+  X-Content-Type-Options: "nosniff"
+  X-XSS-Protection: "1; mode=block"
+  Referrer-Policy: "strict-origin-when-cross-origin"
+
+# GitHub-specific configuration for repository access
+github:
+  # Enable repository-level access control
+  require_verified_email: true
+
+  # Organizations and teams (configured via environment)
+  # OAUTH2_PROXY_GITHUB_ORG: factfiber-ai
+  # OAUTH2_PROXY_GITHUB_TEAM: (optional, leave empty for org-wide access)
+
+# Custom page templates (optional)
+custom_templates_dir: "/templates"
+
+# Metrics and monitoring
+metrics_address: "0.0.0.0:8080"
+
+# Reverse proxy configuration
+reverse_proxy: true
+real_client_ip_header: "X-Forwarded-For"
+
+# Session storage (for production, consider Redis)
+session_store_type: "cookie"  # Use "redis" for production
+
+# Redis configuration (if using Redis session store)
+# redis_connection_url: "redis://redis:6379"
+# redis_password: ""
+# redis_sentinel_master_name: ""
+
+# Request timeout configuration
+upstream_timeout: "30s"
+flush_interval: "1s"
+
+# Custom error pages
+error_on_refresh: false
+display_htpasswd_form: false
+
+# Development/debugging options
+banner: "FactFiber.ai Documentation Access"
+footer: "Powered by OAuth2-Proxy"
+
+# API configuration for health checks
+ping_path: "/ping"
+ready_path: "/ready"
+
+# Whitelist specific paths that should always be accessible
+whitelist_domains: []
+
+# Additional security configurations
+ssl_insecure_skip_verify: false  # Set to true only for development
+ssl_upstream_insecure_skip_verify: false
+
+# Profile URL for additional user information
+profile_url: "https://api.github.com/user"
+
+# Force HTTPS redirect (disable for development)
+force_https: false  # Set to true in production
+
+# Custom sign-in page (optional)
+sign_in_page: ""
+
+# Provider-specific settings
+provider_display_name: "GitHub"
+
+# Request ID header for tracing
+request_id_header: "X-Request-Id"
+
+# Skip OAuth for localhost in development
+skip_oidc_discovery: false
+insecure_oidc_allow_unverified_email: false
+
+# Rate limiting (optional)
+requests_per_second: 0  # 0 disables rate limiting
+
+# JWT verification (if needed)
+jwt_key: ""
+jwt_key_file: ""
+
+# Alpha config (for testing new features)
+alpha_config:
+  enabled: false

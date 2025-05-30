@@ -57,6 +57,10 @@ class AuthSettings(BaseSettings):
         default="X-Forwarded-Groups",
         description="Header containing user groups",
     )
+    oauth2_proxy_access_token_header: str = Field(
+        default="X-Auth-Request-Access-Token",
+        description="Header containing GitHub access token",
+    )
 
     model_config = SettingsConfigDict(env_prefix="AUTH_")
 
