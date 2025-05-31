@@ -28,6 +28,11 @@ class GitHubSettings(BaseSettings):
 
     model_config = SettingsConfigDict(env_prefix="GITHUB_")
 
+    @property
+    def github_webhook_secret(self) -> str:
+        """Alias for webhook_secret for backward compatibility."""
+        return self.webhook_secret
+
 
 class AuthSettings(BaseSettings):
     """Authentication and authorization settings."""

@@ -1,0 +1,88 @@
+# DevSpace profiles for different development scenarios
+# Imported by main devspace.yaml
+
+profiles:
+  # Production-like development environment
+  - name: staging
+    description: "Staging-like environment for integration testing"
+    patches:
+      - op: replace
+        path: images.app.tags
+        value:
+          - staging-${DEVSPACE_TIMESTAMP}
+      - op: replace  
+        path: dev.app.env
+        value:
+          - name: ENVIRONMENT
+            value: staging
+          - name: DEBUG
+            value: "false"
+          - name: RELOAD
+            value: "false"
+            
+  # Performance testing profile
+  - name: performance
+    description: "Performance testing with resource limits"
+    patches:
+      - op: add
+        path: deployments.ff-docs-app.kubectl.manifests.-
+        value: k8s/resource-limits.yaml
+      - op: replace
+        path: dev.app.env
+        value:
+          - name: ENVIRONMENT
+            value: performance
+          - name: DEBUG
+            value: "false"
+          - name: LOG_LEVEL
+            value: WARNING
+            
+  # Documentation-focused development
+  - name: docs-only
+    description: "Documentation development without API services"
+    patches:
+      - op: replace
+        path: dev.app.ports
+        value:
+          - port: "8001:8001"  # Only MkDocs server
+      - op: replace
+        path: dev.app.open
+        value:
+          - url: http://localhost:8001
+          
+  # API-focused development
+  - name: api-only
+    description: "API development without documentation server"
+    patches:
+      - op: replace
+        path: dev.app.ports
+        value:
+          - port: "8000:8000"  # Only FastAPI server
+      - op: replace
+        path: dev.app.open
+        value:
+          - url: http://localhost:8000
+          - url: http://localhost:8000/docs
+          
+  # Security testing profile
+  - name: security
+    description: "Security testing with OAuth2-Proxy and HTTPS"
+    patches:
+      - op: add
+        path: deployments.oauth2-proxy-security
+        value:
+          kubectl:
+            manifests:
+              - k8s/oauth2-proxy-deployment.yaml
+              - k8s/oauth2-proxy-service.yaml
+              - k8s/oauth2-proxy-configmap.yaml
+              - k8s/tls-certificate.yaml
+      - op: add
+        path: dev.oauth2-proxy
+        value:
+          imageSelector: quay.io/oauth2-proxy/oauth2-proxy
+          ports:
+            - port: "4180:4180"
+          env:
+            - name: OAUTH2_PROXY_HTTPS_ADDRESS
+              value: "0.0.0.0:4180"

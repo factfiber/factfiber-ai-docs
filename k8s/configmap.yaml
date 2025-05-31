@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ff-docs-config
+  namespace: ff-docs-dev
+  labels:
+    app.kubernetes.io/name: ff-docs
+    app.kubernetes.io/component: configuration
+data:
+  # Application configuration
+  ENVIRONMENT: "development"
+  DEBUG: "true"
+  LOG_LEVEL: "INFO"
+  
+  # Server configuration
+  SERVER_HOST: "0.0.0.0"
+  SERVER_PORT: "8000"
+  SERVER_RELOAD: "true"
+  
+  # MkDocs configuration
+  MKDOCS_SITE_NAME: "FactFiber.ai Documentation"
+  MKDOCS_SITE_URL: "http://localhost:8000"
+  MKDOCS_TEMP_DIR: "/tmp/ff-docs"
+  
+  # GitHub configuration (secrets will override these)
+  GITHUB_ORG: "factfiber"
+  GITHUB_API_URL: "https://api.github.com"
+  
+  # CORS configuration for development
+  CORS_ORIGINS: '["http://localhost:3000", "http://localhost:8000", "http://localhost:8001"]'

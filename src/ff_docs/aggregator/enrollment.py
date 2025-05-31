@@ -386,3 +386,26 @@ class ValidationManager:
         except OSError:
             logger.exception("Error reading MkDocs config file")
             return False
+
+
+# Helper functions for global access
+async def get_enrolled_repositories() -> list[dict[str, Any]]:
+    """
+    Get list of enrolled repositories.
+
+    Returns:
+        List of enrolled repository configurations
+    """
+    enrollment = RepositoryEnrollment()
+    repos = enrollment.list_enrolled_repositories()
+
+    # Convert to expected format with import_url and other metadata
+    return [
+        {
+            "name": repo["name"],
+            "section": repo.get("section", "Projects"),
+            "import_url": repo["import_url"],
+            "config": {},
+        }
+        for repo in repos
+    ]

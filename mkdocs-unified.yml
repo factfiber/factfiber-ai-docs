@@ -1,0 +1,107 @@
+site_name: FactFiber Documentation
+site_description: Centralized documentation hub for FactFiber.ai projects and systems
+site_url: https://docs.factfiber.ai
+repo_name: factfiber/factfiber-ai-docs
+repo_url: https://github.com/factfiber/factfiber-ai-docs
+edit_uri: edit/main/docs/
+docs_dir: docs
+theme:
+  name: material
+  palette:
+  - scheme: default
+    primary: blue
+    accent: blue
+    toggle:
+      icon: material/brightness-7
+      name: Switch to dark mode
+  - scheme: slate
+    primary: blue
+    accent: blue
+    toggle:
+      icon: material/brightness-4
+      name: Switch to light mode
+  features:
+  - navigation.tabs
+  - navigation.sections
+  - navigation.expand
+  - navigation.top
+  - navigation.indexes
+  - search.highlight
+  - search.share
+  - search.suggest
+  - content.code.copy
+  - content.action.edit
+  - content.action.view
+  - content.tabs.link
+markdown_extensions:
+- pymdownx.highlight:
+    anchor_linenums: true
+    line_spans: __span
+    pygments_lang_class: true
+- pymdownx.inlinehilite
+- pymdownx.snippets
+- pymdownx.superfences:
+    custom_fences:
+    - name: mermaid
+      class: mermaid
+      format: '!!python/name:pymdownx.superfences.fence_code_format'
+- pymdownx.arithmatex:
+    generic: true
+- pymdownx.betterem:
+    smart_enable: all
+- pymdownx.caret
+- pymdownx.details
+- pymdownx.emoji:
+    emoji_index: '!!python/name:material.extensions.emoji.twemoji'
+    emoji_generator: '!!python/name:material.extensions.emoji.to_svg'
+- pymdownx.keys
+- pymdownx.mark
+- pymdownx.smartsymbols
+- pymdownx.tabbed:
+    alternate_style: true
+- pymdownx.tasklist:
+    custom_checkbox: true
+- pymdownx.tilde
+- attr_list
+- md_in_html
+- admonition
+- def_list
+- footnotes
+- meta
+- toc:
+    permalink: true
+    title: On this page
+extra_javascript:
+- https://polyfill.io/v3/polyfill.min.js?features=es6
+- https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+- https://unpkg.com/mermaid/dist/mermaid.min.js
+extra:
+  version:
+    provider: mike
+  social:
+  - icon: fontawesome/brands/github
+    link: https://github.com/factfiber
+  - icon: fontawesome/brands/linkedin
+    link: https://linkedin.com/company/factfiber
+nav:
+- Home: index.md
+- Projects:
+    Timbuktu: '!import https://github.com/factfiber/timbuktu.git?branch=main&docs_dir=docs/*'
+- API Reference:
+    Overview: api/index.md
+- Development:
+  - Getting Started: dev/getting-started.md
+  - Contributing: dev/contributing.md
+  - Architecture: dev/architecture.md
+plugins:
+- search:
+    separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+- multirepo:
+    cleanup: true
+    keep_docs_dir: true
+- mermaid2:
+    arguments:
+      theme: default
+watch:
+- docs/
+- src/

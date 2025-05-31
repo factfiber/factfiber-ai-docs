@@ -1,0 +1,214 @@
+# DevSpace configuration for FactFiber Documentation Infrastructure
+# Enables hot-reloading development workflow with Kubernetes
+
+version: v2beta1
+name: ff-docs
+
+imports:
+  - path: devspace-profiles.yaml
+
+# Variables for configuration
+vars:
+  IMAGE: factfiber/ff-docs
+  REGISTRY: ghcr.io
+  NAMESPACE: ff-docs-dev
+  
+# Images to build and deploy
+images:
+  app:
+    image: ${REGISTRY}/${IMAGE}
+    dockerfile: ./Dockerfile
+    context: .
+    tags:
+      - dev-${DEVSPACE_TIMESTAMP}
+    kaniko:
+      cache: true
+  frontend:
+    image: ${REGISTRY}/${IMAGE}-frontend
+    dockerfile: ./frontend/Dockerfile
+    context: ./frontend
+    tags:
+      - dev-${DEVSPACE_TIMESTAMP}
+    kaniko:
+      cache: true
+      
+# Deployment configuration
+deployments:
+  ff-docs-app:
+    kubectl:
+      manifests:
+        - k8s/namespace.yaml
+        - k8s/configmap.yaml
+        - k8s/secret.yaml
+        - k8s/deployment.yaml
+        - k8s/service.yaml
+        - k8s/ingress.yaml
+
+# Development configuration
+dev:
+  app:
+    # Use the main app container for development
+    imageSelector: ${REGISTRY}/${IMAGE}
+    
+    # File synchronization for hot-reloading
+    sync:
+      - path: ./src:/app/src
+        excludePaths:
+          - "**/__pycache__/**"
+          - "**/.pytest_cache/**"
+          - "**/*.pyc"
+        onUpload:
+          restartContainer: true
+          
+      - path: ./docs:/app/docs
+        onUpload:
+          restartContainer: false
+          
+      - path: ./mkdocs.yml:/app/mkdocs.yml
+        onUpload:
+          restartContainer: true
+          
+    # Port forwarding for local development
+    ports:
+      - port: "8000:8000"  # FastAPI server
+      - port: "8001:8001"  # MkDocs development server (if running)
+      - port: "3000:3000"  # React frontend development server
+      
+    # Environment variables for development
+    env:
+      - name: ENVIRONMENT
+        value: development
+      - name: DEBUG
+        value: "true"
+      - name: RELOAD
+        value: "true"
+        
+    # Open development URLs automatically
+    open:
+      - url: http://localhost:8000
+      - url: http://localhost:8000/docs  # FastAPI docs
+        
+    # Terminal access for debugging
+    terminal:
+      enabled: true
+      
+# Commands for common development tasks
+commands:
+  setup:
+    description: "Initialize development environment"
+    command: |
+      echo "Setting up FactFiber Docs development environment..."
+      kubectl create namespace ${NAMESPACE} --dry-run=client -o yaml | kubectl apply -f -
+      kubectl config set-context --current --namespace=${NAMESPACE}
+      echo "Environment setup complete!"
+      
+  logs:
+    description: "Show application logs"
+    command: "devspace logs -f"
+    
+  test:
+    description: "Run tests in development container"
+    command: "devspace enter -- poetry run pytest tests/ -v"
+    
+  lint:
+    description: "Run linting in development container"  
+    command: "devspace enter -- poetry run pre-commit run --all-files"
+    
+  shell:
+    description: "Open shell in development container"
+    command: "devspace enter"
+    
+  docs-serve:
+    description: "Start MkDocs development server"
+    command: "devspace enter -- poetry run mkdocs serve --dev-addr 0.0.0.0:8001"
+    
+  api-serve:
+    description: "Start FastAPI development server"
+    command: "devspace enter -- poetry run ff-docs serve-api --host 0.0.0.0 --port 8000 --reload"
+    
+  reset:
+    description: "Reset development environment"
+    command: |
+      devspace reset
+      kubectl delete namespace ${NAMESPACE} --ignore-not-found=true
+      
+# Hooks for automation
+hooks:
+  - name: "create-secrets"
+    events: ["before:deploy"]
+    command: |
+      kubectl create secret generic ff-docs-secrets \
+        --from-literal=github-token="${GITHUB_TOKEN:-}" \
+        --from-literal=jwt-secret-key="dev-secret-key-$(date +%s)" \
+        --from-literal=oauth2-proxy-secret="dev-oauth2-secret-$(date +%s)" \
+        --namespace=${NAMESPACE} \
+        --dry-run=client -o yaml | kubectl apply -f -
+        
+  - name: "wait-for-deployment"
+    events: ["after:deploy"]
+    command: |
+      kubectl wait --for=condition=ready pod -l app=ff-docs --timeout=300s -n ${NAMESPACE}
+      
+# Profiles for different development scenarios
+profiles:
+  - name: oauth2-proxy
+    description: "Development with OAuth2-Proxy authentication"
+    merge:
+      deployments:
+        oauth2-proxy:
+          kubectl:
+            manifests:
+              - k8s/oauth2-proxy-deployment.yaml
+              - k8s/oauth2-proxy-service.yaml
+              - k8s/oauth2-proxy-configmap.yaml
+      dev:
+        oauth2-proxy:
+          imageSelector: quay.io/oauth2-proxy/oauth2-proxy
+          ports:
+            - port: "4180:4180"
+          open:
+            - url: http://localhost:4180
+            
+  - name: full-stack
+    description: "Full development stack with all services"
+    merge:
+      deployments:
+        postgres:
+          kubectl:
+            manifests:
+              - k8s/postgres-deployment.yaml
+              - k8s/postgres-service.yaml
+              - k8s/postgres-pvc.yaml
+        redis:
+          kubectl:
+            manifests:
+              - k8s/redis-deployment.yaml
+              - k8s/redis-service.yaml
+      dev:
+        postgres:
+          imageSelector: postgres:15
+          ports:
+            - port: "5432:5432"
+        redis:
+          imageSelector: redis:7-alpine
+          ports:
+            - port: "6379:6379"
+            
+  - name: minimal
+    description: "Minimal development setup (app only)"
+    merge:
+      deployments:
+        oauth2-proxy: !reset {}
+        postgres: !reset {}
+        redis: !reset {}
+
+# Dependencies for DevSpace
+dependencies:
+  - name: cert-manager
+    git: https://github.com/cert-manager/cert-manager
+    subPath: deploy/charts/cert-manager
+    skipDependency: true  # Optional for development
+    
+# Local registry for faster development (optional)
+localRegistry:
+  enabled: false  # Set to true for air-gapped development

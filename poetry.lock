@@ -2942,6 +2942,23 @@ files = [
 ]
 
 [[package]]
+name = "pdoc"
+version = "15.0.3"
+description = "API Documentation for Python Projects"
+optional = false
+python-versions = ">=3.9"
+groups = ["main"]
+files = [
+    {file = "pdoc-15.0.3-py3-none-any.whl", hash = "sha256:686c921ef2622f166de5f73b7241935a4ddac79c8d10dbfa43def8c1fca86550"},
+    {file = "pdoc-15.0.3.tar.gz", hash = "sha256:6482d8ebbd40185fea5e6aec2f1592f4be92e93cf6bf70b9e2a00378bbaf3252"},
+]
+
+[package.dependencies]
+Jinja2 = ">=2.11.0"
+MarkupSafe = ">=1.1.1"
+pygments = ">=2.12.0"
+
+[[package]]
 name = "pexpect"
 version = "4.9.0"
 description = "Pexpect allows easy control of interactive console applications."
@@ -5038,4 +5055,4 @@ monitoring = ["elasticsearch", "grafana-api", "redis"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.13"
-content-hash = "80691ae02584757c415d8076d94f27b08488a049a291348826aa474e80028742"
+content-hash = "4b43a1665761e055accc861f50720e5c73012a88df30e31e2bd481c777d350a2"
