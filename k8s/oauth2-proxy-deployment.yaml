@@ -39,7 +39,7 @@ spec:
           value: "0.0.0.0:44180"
         - name: OAUTH2_PROXY_UPSTREAMS
           value: "http://ff-docs-app:8000/"
-        
+
         # Provider configuration (GitHub)
         - name: OAUTH2_PROXY_PROVIDER
           value: "github"
@@ -47,7 +47,7 @@ spec:
           value: "factfiber"
         - name: OAUTH2_PROXY_GITHUB_TEAM
           value: "docs-team,platform-team,admin-team"
-        
+
         # Session configuration
         - name: OAUTH2_PROXY_COOKIE_SECURE
           value: "false"  # Set to true for HTTPS
@@ -57,7 +57,7 @@ spec:
           value: "true"
         - name: OAUTH2_PROXY_COOKIE_NAME
           value: "_oauth2_proxy_ff_docs"
-        
+
         # Headers for downstream services
         - name: OAUTH2_PROXY_SET_XAUTHREQUEST
           value: "true"
@@ -65,13 +65,13 @@ spec:
           value: "true"
         - name: OAUTH2_PROXY_PASS_USER_HEADERS
           value: "true"
-        
+
         # Development settings
         - name: OAUTH2_PROXY_EMAIL_DOMAINS
           value: "*"  # Allow any email domain in development
         - name: OAUTH2_PROXY_SKIP_PROVIDER_BUTTON
           value: "false"
-        
+
         # Secrets from environment
         - name: OAUTH2_PROXY_CLIENT_ID
           valueFrom:
@@ -91,7 +91,7 @@ spec:
               name: oauth2-proxy-secrets
               key: cookie-secret
               optional: true
-        
+
         # Health checks
         livenessProbe:
           httpGet:
@@ -105,7 +105,7 @@ spec:
             port: http
           initialDelaySeconds: 5
           periodSeconds: 5
-        
+
         # Resource limits
         resources:
           requests:
@@ -114,7 +114,7 @@ spec:
           limits:
             cpu: 200m
             memory: 256Mi
-            
+
         # Security context
         securityContext:
           readOnlyRootFilesystem: true
@@ -123,4 +123,4 @@ spec:
           allowPrivilegeEscalation: false
           capabilities:
             drop:
-              - ALL
+            - ALL

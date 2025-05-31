@@ -166,7 +166,7 @@ class SecureSearchEngine:
                 if has_access:
                     accessible_repos.append(repo_name)
 
-            except Exception as e:
+            except (ValueError, RuntimeError) as e:
                 logger.warning(
                     "Failed to check access for %s to %s: %s",
                     user_session.username,
@@ -295,7 +295,7 @@ _search_engine: SecureSearchEngine | None = None
 
 def get_search_engine() -> SecureSearchEngine:
     """Get the global search engine instance."""
-    global _search_engine
+    global _search_engine  # noqa: PLW0603
     if _search_engine is None:
         _search_engine = SecureSearchEngine()
     return _search_engine

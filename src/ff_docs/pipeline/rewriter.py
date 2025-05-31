@@ -51,7 +51,7 @@ class MarkdownLinkRewriter:
     )
 
     RELATIVE_LINK_PATTERN = re.compile(
-        r"^(?!https?://|mailto:|#)([^/].*)",  # Not absolute URL, mailto, or fragment
+        r"^(?!https?://|mailto:|#)([^/].*)",
         re.IGNORECASE,
     )
 
@@ -292,9 +292,8 @@ def create_link_rewriter_for_repos(
 
         # Extract organization and repository name
         if "/" in repo_name:
-            org, repo_short = repo_name.split("/", 1)
+            _, repo_short = repo_name.split("/", 1)
         else:
-            org = "unknown"
             repo_short = repo_name
 
         # Create rewrite rule

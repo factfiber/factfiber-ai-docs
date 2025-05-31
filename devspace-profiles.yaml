@@ -10,7 +10,7 @@ profiles:
         path: images.app.tags
         value:
           - staging-${DEVSPACE_TIMESTAMP}
-      - op: replace  
+      - op: replace
         path: dev.app.env
         value:
           - name: ENVIRONMENT
@@ -19,7 +19,7 @@ profiles:
             value: "false"
           - name: RELOAD
             value: "false"
-            
+
   # Performance testing profile
   - name: performance
     description: "Performance testing with resource limits"
@@ -36,7 +36,7 @@ profiles:
             value: "false"
           - name: LOG_LEVEL
             value: WARNING
-            
+
   # Documentation-focused development
   - name: docs-only
     description: "Documentation development without API services"
@@ -49,7 +49,7 @@ profiles:
         path: dev.app.open
         value:
           - url: http://localhost:8001
-          
+
   # API-focused development
   - name: api-only
     description: "API development without documentation server"
@@ -63,7 +63,7 @@ profiles:
         value:
           - url: http://localhost:8000
           - url: http://localhost:8000/docs
-          
+
   # Security testing profile
   - name: security
     description: "Security testing with OAuth2-Proxy and HTTPS"

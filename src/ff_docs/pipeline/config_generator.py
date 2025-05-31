@@ -211,7 +211,7 @@ class UnifiedConfigGenerator:
         Returns:
             Unified navigation configuration
         """
-        nav = [{"Home": "index.md"}]
+        nav: list[dict[str, Any]] = [{"Home": "index.md"}]
 
         # Group repositories by section
         sections: dict[str, list[dict[str, Any]]] = {}
@@ -293,7 +293,7 @@ class UnifiedConfigGenerator:
         Returns:
             Plugin configuration list
         """
-        plugins = [
+        plugins: list[dict[str, Any]] = [
             {
                 "search": {
                     "separator": r'[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'  # noqa: E501
@@ -375,7 +375,7 @@ _config_generator: UnifiedConfigGenerator | None = None
 
 def get_config_generator() -> UnifiedConfigGenerator:
     """Get the global config generator instance."""
-    global _config_generator
+    global _config_generator  # noqa: PLW0603
     if _config_generator is None:
         _config_generator = UnifiedConfigGenerator()
     return _config_generator

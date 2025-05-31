@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       const authStatus: AuthStatus = await apiService.getAuthStatus();
-      
+
       if (authStatus.authenticated && authStatus.user) {
         setUser(authStatus.user);
         setAuthenticated(true);
@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       setError(null);
       const authStatus: AuthStatus = await apiService.login(token);
-      
+
       if (authStatus.authenticated && authStatus.user) {
         setUser(authStatus.user);
         setAuthenticated(true);

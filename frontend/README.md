@@ -16,7 +16,7 @@ Modern React TypeScript frontend for the FactFiber Documentation Infrastructure 
 
 ## Quick Start
 
-### Development
+### Development Setup
 
 ```bash
 # Install dependencies
@@ -59,7 +59,7 @@ devspace dev
 
 ## Project Structure
 
-```
+```text
 frontend/
 ├── public/                 # Static assets
 │   ├── index.html         # HTML template
@@ -177,7 +177,7 @@ npm test -- --watch
 
 ## Deployment
 
-### Production Build
+### Production Deployment
 
 ```bash
 # Create optimized production build
@@ -232,22 +232,25 @@ images:
 ### Common Issues
 
 1. **API Connection Failed**
+
    ```bash
    # Check backend is running
    curl http://localhost:8000/health/
-   
+
    # Verify CORS configuration
    ```
 
 2. **Authentication Issues**
+
    ```bash
    # Clear localStorage
    localStorage.removeItem('ff_docs_token')
-   
+
    # Check OAuth2-Proxy configuration
    ```
 
 3. **Build Failures**
+
    ```bash
    # Clear cache and reinstall
    rm -rf node_modules package-lock.json

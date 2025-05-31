@@ -179,7 +179,7 @@ const Dashboard: React.FC = () => {
                 <SettingsIcon />
                 System Configuration
               </Typography>
-              
+
               {configLoading ? (
                 <Box>
                   {Array.from({ length: 4 }).map((_, i) => (
@@ -238,7 +238,7 @@ const Dashboard: React.FC = () => {
                   </ListItem>
                 </List>
               )}
-              
+
               <Box sx={{ mt: 2 }}>
                 <Button
                   variant="outlined"
@@ -258,7 +258,7 @@ const Dashboard: React.FC = () => {
                 <ScheduleIcon />
                 Recent Activity
               </Typography>
-              
+
               {dashboardLoading ? (
                 <Box>
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -290,7 +290,7 @@ const Dashboard: React.FC = () => {
                   No recent activity to display. Start by enrolling some repositories!
                 </Alert>
               )}
-              
+
               <Box sx={{ mt: 2 }}>
                 <Button
                   variant="outlined"
@@ -310,7 +310,7 @@ const Dashboard: React.FC = () => {
                 <TrendingUpIcon />
                 Sync Status Overview
               </Typography>
-              
+
               {syncLoading ? (
                 <Box>
                   <Skeleton width="100%" height={20} sx={{ mb: 2 }} />

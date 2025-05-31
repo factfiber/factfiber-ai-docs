@@ -108,7 +108,7 @@ def contains_docs_changes(commits: list[dict[str, Any]]) -> bool:
     return False
 
 
-@router.post("/github", response_model=WebhookResponse)
+@router.post("/github")
 async def handle_github_webhook(request: Request) -> WebhookResponse:
     """
     Handle incoming GitHub webhook for documentation updates.
@@ -143,24 +143,21 @@ async def handle_github_webhook(request: Request) -> WebhookResponse:
     payload_bytes = await request.body()
 
     # Verify webhook signature
-    if settings.github.webhook_secret:
-        if not verify_github_signature(
-            payload_bytes, signature, settings.github.webhook_secret
-        ):
-            logger.warning(
-                "Invalid webhook signature for delivery %s", delivery_id
-            )
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid webhook signature",
-            )
+    if settings.github.webhook_secret and not verify_github_signature(
+        payload_bytes, signature, settings.github.webhook_secret
+    ):
+        logger.warning("Invalid webhook signature for delivery %s", delivery_id)
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid webhook signature",
+        )
 
     # Parse payload
     try:
         payload_dict = await request.json()
         webhook_payload = GitHubWebhookPayload(**payload_dict)
-    except Exception as e:
-        logger.error("Failed to parse webhook payload: %s", e)
+    except (ValueError, TypeError) as e:
+        logger.exception("Failed to parse webhook payload")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid webhook payload",
@@ -196,7 +193,7 @@ async def handle_github_webhook(request: Request) -> WebhookResponse:
                 message=f"Repository '{repo_full_name}' not enrolled",
                 repository=repo_full_name,
             )
-    except Exception as e:
+    except (ValueError, RuntimeError) as e:
         logger.warning(
             "Could not check enrollment status for %s: %s", repo_full_name, e
         )

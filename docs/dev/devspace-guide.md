@@ -1,14 +1,21 @@
 # DevSpace Development Guide
 
-This guide explains how to use DevSpace for developing the FactFiber Documentation Infrastructure with Kubernetes.
+This guide explains how to use DevSpace for developing the FactFiber
+Documentation Infrastructure with Kubernetes.
 
 ## Prerequisites
 
 ### Required Tools
 
 1. **DevSpace CLI** - Install from [devspace.sh](https://devspace.sh)
+
    ```bash
-   curl -s -L "https://github.com/loft-sh/devspace/releases/latest" | sed -nE 's!.*"([^"]*devspace-linux-amd64)".*!https://github.com\1!p' | xargs -n 1 curl -L -o devspace && chmod +x devspace && sudo mv devspace /usr/local/bin
+   # Install DevSpace CLI
+   curl -s -L "https://github.com/loft-sh/devspace/releases/latest" |
+     sed -nE 's!.*"([^"]*devspace-linux-amd64)".*!https://github.com\1!p' |
+     xargs -n 1 curl -L -o devspace
+   chmod +x devspace
+   sudo mv devspace /usr/local/bin
    ```
 
 2. **Kubernetes Cluster** - Local or remote
@@ -45,9 +52,9 @@ devspace dev
 
 Once `devspace dev` is running:
 
-- **FastAPI server** available at: http://localhost:8000
-- **API documentation** at: http://localhost:8000/docs
-- **MkDocs server** (when running) at: http://localhost:8001
+- **FastAPI server** available at: <http://localhost:8000>
+- **API documentation** at: <http://localhost:8000/docs>
+- **MkDocs server** (when running) at: <http://localhost:8001>
 - **Auto-sync** enabled for code changes
 
 ### 3. Common Development Commands
@@ -83,49 +90,61 @@ devspace run reset
 DevSpace supports different development scenarios through profiles:
 
 ### Standard Development (default)
+
 ```bash
 devspace dev
 ```
+
 - Full application stack
 - Hot-reloading enabled
 - Both FastAPI and MkDocs ports available
 
 ### API-Only Development
+
 ```bash
 devspace dev -p api-only
 ```
+
 - Focus on FastAPI development
 - Only port 8000 exposed
 - Optimized for backend work
 
 ### Documentation-Only Development
+
 ```bash
 devspace dev -p docs-only
 ```
+
 - Focus on MkDocs documentation
 - Only port 8001 exposed
 - Optimized for documentation authoring
 
 ### OAuth2-Proxy Development
+
 ```bash
 devspace dev -p oauth2-proxy
 ```
+
 - Includes OAuth2-Proxy service
 - Authentication flow testing
 - GitHub OAuth integration
 
 ### Full Stack Development
+
 ```bash
 devspace dev -p full-stack
 ```
+
 - Includes PostgreSQL and Redis
 - Complete infrastructure stack
 - Integration testing environment
 
 ### Staging Environment
+
 ```bash
 devspace dev -p staging
 ```
+
 - Production-like settings
 - No debug mode
 - Performance testing
@@ -157,7 +176,7 @@ You can override DevSpace configuration:
 vars:
   NAMESPACE: "my-custom-namespace"
   IMAGE: "my-registry/ff-docs"
-  
+
 dev:
   app:
     env:
@@ -272,6 +291,7 @@ curl -H "Authorization: Bearer token" http://localhost:8000/repos/
 ### Common Issues
 
 1. **Port already in use**
+
    ```bash
    # Kill processes using ports
    sudo lsof -ti:8000 | xargs kill -9
@@ -279,28 +299,31 @@ curl -H "Authorization: Bearer token" http://localhost:8000/repos/
    ```
 
 2. **Container won't start**
+
    ```bash
    # Check container logs
    devspace logs
-   
+
    # Rebuild image
    devspace build --force-rebuild
    ```
 
 3. **File sync not working**
+
    ```bash
    # Restart DevSpace
    devspace dev --force-rebuild
-   
+
    # Check sync status
    devspace status
    ```
 
 4. **Kubernetes connection issues**
+
    ```bash
    # Check cluster access
    kubectl cluster-info
-   
+
    # Verify namespace
    kubectl get ns ff-docs-dev
    ```
@@ -362,6 +385,7 @@ devspace deploy -p staging --namespace ff-docs-staging
 ### VS Code
 
 Install the DevSpace extension for:
+
 - One-click development startup
 - Integrated terminal access
 - Log streaming
@@ -370,6 +394,7 @@ Install the DevSpace extension for:
 ### IntelliJ/PyCharm
 
 Configure remote interpreter:
+
 1. Add Docker interpreter
 2. Point to DevSpace container
 3. Enable automatic upload/sync

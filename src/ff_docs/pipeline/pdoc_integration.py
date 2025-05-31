@@ -94,10 +94,12 @@ class PdocGenerator:
                 await self._generate_package_docs(repo_dir, package, config)
                 docs_generated += 1
                 logger.info("Generated docs for package: %s", package)
-            except Exception as e:
+            except (ImportError, OSError, ValueError) as e:
                 error_msg = f"Failed to generate docs for {package}: {e}"
                 errors.append(error_msg)
-                logger.error(error_msg)
+                logger.exception(
+                    "Failed to generate docs for package %s", package
+                )
 
         return {
             "enabled": True,
@@ -138,7 +140,7 @@ class PdocGenerator:
                     if pdoc_config:
                         return PdocConfig(**pdoc_config)
 
-                except Exception as e:
+                except (OSError, ValueError, TypeError) as e:
                     logger.warning(
                         "Failed to parse config file %s: %s", config_file, e
                     )
@@ -305,13 +307,16 @@ class PdocGenerator:
                     ) as f:
                         await f.write(processed_content)
 
-            except Exception as e:
+            except (OSError, ValueError) as e:
                 logger.warning(
                     "Failed to post-process HTML file %s: %s", html_file, e
                 )
 
     async def _transform_html_content(
-        self, content: str, html_file: Path, package_path: str
+        self,
+        content: str,
+        html_file: Path,  # noqa: ARG002
+        package_path: str,  # noqa: ARG002
     ) -> str:
         """
         Transform HTML content for better MkDocs integration.
@@ -347,7 +352,7 @@ _pdoc_generator: PdocGenerator | None = None
 
 def get_pdoc_generator() -> PdocGenerator:
     """Get the global pdoc generator instance."""
-    global _pdoc_generator
+    global _pdoc_generator  # noqa: PLW0603
     if _pdoc_generator is None:
         _pdoc_generator = PdocGenerator()
     return _pdoc_generator

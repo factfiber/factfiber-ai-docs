@@ -143,10 +143,10 @@ const Search: React.FC = () => {
 
   const highlightSearchTerm = (text: string, searchTerm: string) => {
     if (!searchTerm.trim()) return text;
-    
+
     const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
     const parts = text.split(regex);
-    
+
     return parts.map((part, index) =>
       regex.test(part) ? (
         <mark key={index} style={{ backgroundColor: '#ffeb3b', padding: '0 2px' }}>

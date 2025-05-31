@@ -143,7 +143,7 @@ const Repositories: React.FC = () => {
   });
 
   const syncMutation = useMutation({
-    mutationFn: ({ repository }: { repository: string }) => 
+    mutationFn: ({ repository }: { repository: string }) =>
       apiService.triggerSync(repository),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sync-statuses'] });

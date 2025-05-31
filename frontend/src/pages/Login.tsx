@@ -54,7 +54,7 @@ const Login: React.FC = () => {
         <title>Login - FactFiber Documentation</title>
         <meta name="description" content="Login to access FactFiber documentation system" />
       </Helmet>
-      
+
       <Container maxWidth="sm">
         <Box
           sx={{
@@ -115,7 +115,7 @@ const Login: React.FC = () => {
                   margin="normal"
                   helperText="Enter your GitHub personal access token for API access"
                 />
-                
+
                 {error && (
                   <Alert severity="error" sx={{ mt: 2 }}>
                     {error}

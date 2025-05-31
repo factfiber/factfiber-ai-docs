@@ -72,7 +72,7 @@ class ContentSyncService:
             repository=repo_full_name,
             commit_sha=commit_sha,
             status="started",
-            started_at=datetime.datetime.now().isoformat(),
+            started_at=datetime.datetime.now(datetime.UTC).isoformat(),
         )
 
         self.sync_status[repo_full_name] = status
@@ -114,7 +114,9 @@ class ContentSyncService:
             # Complete sync
             status.status = "completed"
             status.message = "Documentation sync completed successfully"
-            status.completed_at = datetime.datetime.now().isoformat()
+            status.completed_at = datetime.datetime.now(
+                datetime.UTC
+            ).isoformat()
 
             logger.info(
                 "Sync completed: repo=%s, docs=%d, files=%d",
@@ -123,12 +125,14 @@ class ContentSyncService:
                 status.files_processed,
             )
 
-        except Exception as e:
+        except (OSError, ValueError, RuntimeError) as e:
             status.status = "failed"
             status.error = str(e)
-            status.completed_at = datetime.datetime.now().isoformat()
+            status.completed_at = datetime.datetime.now(
+                datetime.UTC
+            ).isoformat()
 
-            logger.error("Sync failed for repository %s: %s", repo_full_name, e)
+            logger.exception("Sync failed for repository %s", repo_full_name)
 
         return status
 
@@ -279,12 +283,12 @@ class ContentSyncService:
 
                 logger.debug("Applied link rewriting to %s", file_path)
 
-        except Exception as e:
+        except (OSError, ValueError) as e:
             logger.warning(
                 "Failed to process markdown file %s: %s", file_path, e
             )
 
-    async def _process_mkdocs_config(self, file_path: Path) -> None:
+    async def _process_mkdocs_config(self, file_path: Path) -> None:  # noqa: ARG002
         """
         Process MkDocs configuration file.
 
@@ -293,6 +297,7 @@ class ContentSyncService:
         """
         # TODO: Extract navigation structure for unified config
         # This will be part of the unified config generation
+        return
 
     async def _generate_api_documentation(
         self, repo_dir: Path
@@ -317,11 +322,11 @@ class ContentSyncService:
                     result.get("docs_generated", 0),
                 )
 
-            return result
-
-        except Exception as e:
+        except (ImportError, OSError, ValueError) as e:
             logger.warning("Failed to generate API documentation: %s", e)
             return {"enabled": False, "error": str(e), "docs_generated": 0}
+        else:
+            return result
 
     def get_sync_status(self, repo_full_name: str) -> SyncStatus | None:
         """
@@ -351,7 +356,7 @@ _content_sync_service: ContentSyncService | None = None
 
 def get_content_sync_service() -> ContentSyncService:
     """Get the global content sync service instance."""
-    global _content_sync_service
+    global _content_sync_service  # noqa: PLW0603
     if _content_sync_service is None:
         _content_sync_service = ContentSyncService()
     return _content_sync_service

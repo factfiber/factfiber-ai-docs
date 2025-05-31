@@ -54,7 +54,7 @@ import { useAuth } from '@/hooks/useAuth';
 const Settings: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  
+
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [buildDialogOpen, setBuildDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState<{
@@ -148,7 +148,7 @@ const Settings: React.FC = () => {
             <SettingsIcon />
             System Status
           </Typography>
-          
+
           <Grid container spacing={3}>
             <Grid item xs={12} md={6}>
               <List>

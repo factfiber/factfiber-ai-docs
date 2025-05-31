@@ -29,7 +29,7 @@ code {
   body {
     font-size: 14px;
   }
-  
+
   /* Improve touch targets */
   button, [role="button"] {
     min-height: 44px;
@@ -65,7 +65,7 @@ code {
     background: white !important;
     color: black !important;
   }
-  
+
   /* Hide navigation and non-essential elements */
   nav,
   .MuiDrawer-root,
