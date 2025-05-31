@@ -52,37 +52,37 @@ Successfully implemented comprehensive REST API for repository management:
 - Error handling with proper HTTP status codes
 - Health check endpoints at /health/
 
-**Next Phase:** Sprint 4: Authentication & Security
+### Sprint 5: Documentation Pipeline & Content Management - IN PROGRESS 🚧
 
-**Current API Endpoints:**
+**Objective**: Build automated documentation processing pipeline with unified navigation.
 
-- `GET /health/` - Health check
-- `GET /repos/config` - Configuration status
-- `GET /repos/` - List enrolled repositories
-- `GET /repos/discover` - Discover repositories (requires GitHub token)
-- `POST /repos/enroll` - Enroll repository
-- `DELETE /repos/unenroll` - Remove repository
-- `POST /repos/enroll-all` - Bulk enrollment (requires GitHub token)
+**Current Sprint Focus:**
 
-**Test Commands:**
+- **Automated Documentation Sync**: Real-time GitHub webhook integration
+- **Unified Navigation**: Transparent link rewriting for seamless cross-repo navigation
+- **Content Processing**: MkDocs + pdoc integration for comprehensive documentation
+- **Security Integration**: Repository-scoped access control in unified docs
+- **Global Search**: Cross-repository search with permission filtering
 
-```bash
-# Start FastAPI server
-poetry run ff-docs serve-api --port 8003
+**Design Decisions:**
 
-# Test public endpoints
-curl http://localhost:8003/health/
-curl http://localhost:8003/auth/status
+- **Format Support**: Markdown/MkDocs standardization
+- **Update Strategy**: Real-time sync via GitHub webhooks (with API cost monitoring)
+- **Code Documentation**: pdoc integration for automatic API docs
+- **Navigation**: Unified structure without affecting individual repository documentation
+- **Prototype Repository**: `timbuktu` (existing MkDocs setup as reference)
 
-# Test protected endpoints (requires authentication)
-curl http://localhost:8003/repos/discover
-# Returns: {"detail":"Authentication required"}
+**Implementation Architecture:**
 
-# API documentation
-open http://localhost:8003/docs
+```text
+GitHub Repos → Webhook → Sync Service → Content Processor → MkDocs Builder
+      ↓              ↓           ↓              ↓              ↓
+   Individual    Real-time    Extract &     Build Docs    Serve with
+     Docs         Updates     Validate      + pdoc        Auth Control
 ```
 
-**Next Phase:** Production deployment with OAuth2-Proxy integration
+**Key Innovation**: Transparent link rewriting allows repository authors to write
+documentation normally while automatically creating unified navigation.
 
 ## Project Overview
 
