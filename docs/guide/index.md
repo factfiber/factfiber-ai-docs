@@ -27,7 +27,7 @@ or provides high-level guidance for the FactFiber Documentation Infrastructure.
 - [Repository Onboarding](repository_onboarding.md) - How to add new repositories
 - [Documentation Organization](documentation_organization.md) - Structure guidelines
 - [API Integration](../api/) - Using the FastAPI endpoints
-- [Webhook Configuration](../dev/devspace-guide.md) - Real-time synchronization setup
+- [DevSpace Guide](../dev/devspace-guide.md) - Kubernetes development workflow
 
 ## Workflow Guides
 
