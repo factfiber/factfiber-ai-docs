@@ -9,7 +9,7 @@ imports:
 
 # Variables for configuration
 vars:
-  IMAGE: factfiber/ff-docs
+  IMAGE: factfiber/factfiber-ai-docs
   REGISTRY: ghcr.io
   NAMESPACE: ff-docs-dev
 

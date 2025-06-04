@@ -1,0 +1,400 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[project]
+name = "ff-docs"
+version = "0.1.0"
+description = "FactFiber.ai centralized multi-repository documentation system"
+readme = "README.md"
+license = {text = "Proprietary"}
+authors = [
+    {name = "FactFiber Inc.", email = "engineering@factfiber.ai"},
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.13"
+dependencies = [
+    # Core MkDocs and Material theme
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.0",
+
+    # Multi-repository support
+    "mkdocs-multirepo-plugin>=0.8.3",
+
+    # Documentation enhancement plugins
+    "mkdocs-awesome-pages-plugin>=2.9.0",
+    "mkdocs-git-revision-date-localized-plugin>=1.2.0",
+    "mkdocs-minify-plugin>=0.8.0",
+    "mkdocstrings[python]>=0.25.0",
+    "mkdocs-mermaid2-plugin>=1.1.0",
+    "mkdocs-jupyter>=0.24.0",
+
+    # Mathematical notation support
+    "pymdown-extensions>=10.0",
+
+    # FastAPI for documentation server
+    "fastapi>=0.104.0",
+    "uvicorn[standard]>=0.24.0",
+    "pydantic>=2.0.0",
+    "pydantic-settings>=2.0.0",
+
+    # GitHub integration
+    "PyGithub>=1.59.0",
+    "requests>=2.31.0",
+    "httpx>=0.25.0",
+    "GitPython>=3.1.40",
+
+    # YAML processing
+    "PyYAML>=6.0",
+    "ruamel.yaml>=0.18.0",
+
+    # Authentication and security
+    "pyjwt[cryptography]>=2.8.0",
+    "passlib[bcrypt]>=1.7.4",
+
+    # Monitoring and observability
+    "prometheus-client>=0.19.0",
+
+    # Development utilities
+    "click>=8.1.0",
+    "rich>=13.0.0",
+    "aiofiles (>=24.1.0,<25.0.0)",
+
+    # API documentation generation
+    "pdoc>=14.0.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    # Testing
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "pytest-mock>=3.11.0",
+    "httpx>=0.25.0",  # For FastAPI testing
+
+    # Code quality
+    "pre-commit>=3.4.0",
+    "ruff>=0.8.0",
+    "mypy>=1.6.0",
+    "black>=24.0.0",
+
+    # Type stubs
+    "types-PyYAML>=6.0.0",
+    "types-requests>=2.31.0",
+
+    # Development tools
+    "ipython>=8.15.0",
+    "jupyterlab>=4.0.0",
+]
+
+deploy = [
+    # Kubernetes deployment
+    "kubernetes>=28.1.0",
+
+    # Docker utilities
+    "docker>=6.1.0",
+
+    # Cloud providers
+    "boto3>=1.29.0",  # AWS
+    "google-cloud-storage>=2.10.0",  # GCP
+]
+
+monitoring = [
+    # Advanced monitoring
+    "grafana-api>=1.0.3",
+    "elasticsearch>=8.10.0",
+    "redis>=5.0.0",
+]
+
+
+[project.urls]
+Homepage = "https://factfiber.ai"
+Repository = "https://github.com/factfiber/factfiber-ai-docs"
+Documentation = "https://docs.factfiber.ai"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+ff_docs = ["templates/**/*", "static/**/*", "schemas/**/*"]
+
+# Ruff configuration (from timbuktu)
+[tool.ruff]
+exclude = [
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".git-rewrite",
+  ".hg",
+  ".ipynb_checkpoints",
+  ".mypy_cache",
+  ".nox",
+  ".pants.d",
+  ".pyenv",
+  ".pytest_cache",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".tox",
+  ".venv",
+  ".vscode",
+  "__pypackages__",
+  "_build",
+  "buck-out",
+  "build",
+  "doc",
+  "dist",
+  "node_modules",
+  "site-packages",
+  "venv",
+]
+indent-width = 4
+line-length = 80
+target-version = "py313"
+
+[tool.ruff.lint]
+fixable = ["ALL"]
+unfixable = []
+allowed-confusables = ["l"]
+ignore = [
+  "D100", # Missing docstring in public module
+  "D104", # Missing docstring in public package
+  "D107", # Missing docstring in __init__
+  "D200", # One-line docstring should fit on one line with quotes
+  "D212", # Multi-line docstring summary should start at the first line
+  "D412", # No blank lines allowed between a section header and its content
+  "ERA001", # commented out code
+  "EM101", # Exception must not use a string literal, assign to variable first
+  "TRY003", # Avoid specifying long messages outside the exception class
+  "COM812", # Trailing comma missing
+  "C408", # unnecessary-collection-call
+  "PYI024", # Use `typing.NamedTuple` instead of `collections.namedtuple`
+  "RET504", # Unnecessary assignment before `return` statement
+  "FIX002", # Line contains TODO, consider resolving the issue
+  "TD002", # Missing author in TODO
+  "TD003", # Missing issue link for TODO
+  "N817", # CamelCase imported as acronym
+  "PD011", # Pandas use of dot values
+]
+select = ["ALL"]
+
+[tool.ruff.lint.per-file-ignores]
+"{tests/**/*.py,src/ff_docs/testutil/**/*.py}" = [
+  "D", # doc
+  "S101", # assert
+  "T201", # print
+  "PLR2004", # magic values (e.g. 0, 1)
+  "TID252", # Prefer absolute imports over relative imports from parent modules
+  "ARG001", # Unused function argument
+]
+
+[tool.ruff.format]
+indent-style = "space"
+line-ending = "auto"
+quote-style = "double"
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint.isort]
+combine-as-imports = true
+known-first-party = ["ff_docs"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+# Black configuration
+[tool.black]
+line-length = 80
+target-version = ['py313']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+# MyPy configuration (from timbuktu)
+[tool.mypy]
+allow_untyped_calls = false
+follow_imports = "skip"
+ignore_missing_imports = true
+# plugins = "numpy.typing.mypy_plugin"
+python_version = "3.13"
+
+[[tool.mypy.overrides]]
+module = [
+    "mkdocs.*",
+    "mkdocs_material.*",
+    "mkdocs_multirepo_plugin.*",
+    "pymdownx.*",
+    "github.*",
+    "kubernetes.*",
+    "docker.*",
+]
+ignore_missing_imports = true
+
+# Pytest configuration
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = [
+    "--strict-config",
+    "--strict-markers",
+    "--disable-warnings",
+    "--cov=ff_docs",
+    "--cov-report=term-missing",
+    "--cov-report=html",
+    "--cov-report=xml",
+]
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "unit: marks tests as unit tests",
+    "api: marks tests that require API access",
+    "auth: marks tests that require authentication",
+]
+
+# Coverage configuration
+[tool.coverage.run]
+source = ["src/ff_docs"]
+omit = [
+    "tests/*",
+    "*/migrations/*",
+    "*/venv/*",
+    "*/.venv/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if 0:",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
+]
+
+# pdoc configuration
+[tool.pdoc]
+output_directory = "docs/reference/code"
+include_undocumented = true
+show_source = true
+math = true
+mermaid = true
+
+[tool.poetry]
+name = "ff-docs"
+version = "0.1.0"
+description = "FactFiber.ai centralized multi-repository documentation system"
+authors = ["FactFiber Inc. <engineering@factfiber.ai>"]
+readme = "README.md"
+license = "Proprietary"
+homepage = "https://factfiber.ai"
+repository = "https://github.com/factfiber/factfiber-ai-docs"
+documentation = "https://docs.factfiber.ai"
+packages = [{include = "ff_docs", from = "src"}]
+
+[tool.poetry.scripts]
+ff-docs = "ff_docs.cli:main"
+ff-docs-server = "ff_docs.server:run_server"
+docs-code = "bash -c 'pdoc -o docs/reference/code --math --mermaid src/ff_docs'"
+docs-serve = "mkdocs serve --dev-addr 0.0.0.0:8000"
+docs-build = "mkdocs build"
+docs-clean = "bash -c 'rm -rf docs/reference/code/* site/*'"
+
+[tool.poetry.dependencies]
+python = "^3.13"
+# Core MkDocs and Material theme
+mkdocs = "^1.6.0"
+mkdocs-material = "^9.5.0"
+# Multi-repository support
+mkdocs-multirepo-plugin = "^0.8.3"
+# Documentation enhancement plugins
+mkdocs-awesome-pages-plugin = "^2.9.0"
+mkdocs-git-revision-date-localized-plugin = "^1.2.0"
+mkdocs-minify-plugin = "^0.8.0"
+mkdocstrings = {extras = ["python"], version = "^0.25.0"}
+mkdocs-mermaid2-plugin = "^1.1.0"
+mkdocs-jupyter = "^0.24.0"
+# Mathematical notation support
+pymdown-extensions = "^10.0"
+# FastAPI for documentation server
+fastapi = "^0.104.0"
+uvicorn = {extras = ["standard"], version = "^0.24.0"}
+pydantic = "^2.0.0"
+pydantic-settings = "^2.0.0"
+# GitHub integration
+PyGithub = "^1.59.0"
+requests = "^2.31.0"
+httpx = "^0.25.0"
+GitPython = "^3.1.40"
+# YAML processing
+PyYAML = "^6.0"
+"ruamel.yaml" = "^0.18.0"
+# Authentication and security
+pyjwt = {extras = ["cryptography"], version = "^2.8.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+# Monitoring and observability
+prometheus-client = "^0.19.0"
+# Development utilities
+click = "^8.1.0"
+rich = "^13.0.0"
+aiofiles = "^24.1.0"
+# API documentation generation
+pdoc = "^14.0.0"
+
+[tool.poetry.group.dev.dependencies]
+# Testing
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
+pytest-cov = "^4.1.0"
+pytest-mock = "^3.11.0"
+# Code quality
+pre-commit = "^3.4.0"
+ruff = "^0.8.0"
+mypy = "^1.6.0"
+black = "^24.0.0"
+# Type stubs
+types-PyYAML = "^6.0.0"
+types-requests = "^2.31.0"
+types-click = "^7.1.8"
+types-aiofiles = "^24.1.0.20250516"
+# Development tools
+ipython = "^8.15.0"
+jupyterlab = "^4.0.0"
+
+[tool.poetry.group.deploy.dependencies]
+# Kubernetes deployment
+kubernetes = "^28.1.0"
+# Docker utilities
+docker = "^6.1.0"
+# Cloud providers
+boto3 = "^1.29.0"
+google-cloud-storage = "^2.10.0"
+
+[tool.poetry.group.monitoring.dependencies]
+# Advanced monitoring
+grafana-api = "^1.0.3"
+elasticsearch = "^8.10.0"
+redis = "^5.0.0"

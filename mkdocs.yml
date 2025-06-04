@@ -29,13 +29,16 @@ theme:
     - navigation.expand
     - navigation.top
     - navigation.indexes
+    - navigation.instant
+    - navigation.tracking
     - search.highlight
     - search.share
     - search.suggest
     - content.code.copy
     - content.action.edit
-    - content.action.view
+    - content.tooltips
     - content.tabs.link
+    - toc.follow
   # logo: assets/images/factfiber-logo.svg
   # favicon: assets/images/favicon.ico
 
@@ -77,11 +80,11 @@ markdown_extensions:
   - toc:
       permalink: true
       title: On this page
+      toc_depth: 3
 
 extra_javascript:
   - https://polyfill.io/v3/polyfill.min.js?features=es6
   - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
-  - https://unpkg.com/mermaid/dist/mermaid.min.js
 
 # extra_css:
 #   - assets/css/extra.css
@@ -101,31 +104,62 @@ extra:
 plugins:
   - search:
       separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+      lang: en
   - multirepo:
       cleanup: true
       keep_docs_dir: true
+      temp_dir: tmp/mkdocs-multirepo
   - mermaid2:
       arguments:
-        theme: default
+        theme: |
+          ^(JSON.parse(__md_get("__palette").index == 1)) ?
+          'dark' : 'default'
+      javascript: https://unpkg.com/mermaid/dist/mermaid.min.js
+  - git-revision-date-localized:
+      type: date
+      enable_creation_date: true
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
+      htmlmin_opts:
+        remove_comments: true
 
 nav:
   - Home: index.md
+
+  - User Guide:
+      - guide/index.md
+      - Getting Started: guide/getting-started.md
+      - Architecture: guide/architecture.md
+      - Development: guide/development.md
+      - Documentation Standards: guide/documentation_standards.md
+      - Documentation Organization: guide/documentation_organization.md
+      - Repository Onboarding: guide/repository_onboarding.md
+
   - Projects:
       - Overview: projects/index.md
       - "Timbuktu": "!import https://github.com/factfiber/timbuktu.git?branch=main&docs_dir=docs/*"
+
   - API Reference:
-      - Overview: api/index.md
+      - FastAPI Documentation: api/index.md
+
+  - Technical Reference:
+      - reference/index.md
+      - Components:
+          - ff_docs Package: reference/components/ff_docs/index.md
+      - Code Reference: reference/code/index.html
+
   - Development:
       - Getting Started: dev/getting-started.md
       - Contributing: dev/contributing.md
       - Architecture: dev/architecture.md
       - DevSpace Guide: dev/devspace-guide.md
-  - Documentation Guide:
-      - Documentation Organization: guide/documentation_organization.md
-      - Documentation Standards: guide/documentation_standards.md
-      - Repository Onboarding: guide/repository_onboarding.md
 
 watch:
   - src/
   - docs/
-  - /home/shauncutts/src/factfiber.ai/learn/timbuktu-3/docs/
+
+# Additional configuration
+strict: false             # Don't fail build on warnings (imported repos may have issues)
+use_directory_urls: true  # Pretty URLs

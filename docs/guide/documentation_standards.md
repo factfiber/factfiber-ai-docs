@@ -29,12 +29,13 @@ docs/
 │   ├── architecture.md        # System architecture overview
 │   ├── development.md         # Development guide
 │   └── documentation_standards.md  # This file
-├── reference/                  # Component-specific documentation
-│   └── {package_name}/        # Mirrors source code structure
-│       ├── index.md          # Package overview
-│       └── {module}/         # Module-specific docs
-├── api/                       # Auto-generated API documentation
-│   └── (pdoc HTML output)
+├── reference/                  # Technical reference documentation
+│   ├── code/                  # Auto-generated code documentation (pdoc)
+│   │   └── (pdoc HTML output)
+│   └── components/            # Manual component documentation
+│       └── {package_name}/    # Mirrors source code structure
+│           ├── index.md      # Package overview
+│           └── {module}/     # Module-specific docs
 └── assets/                    # Images, diagrams, and media
     ├── images/
     └── diagrams/
@@ -56,18 +57,22 @@ docs/
 - Development and contribution guides
 - Tutorials and how-to documentation
 
-**`docs/reference/`** (renamed from `src/`)
+**`docs/reference/`**
 
-- Component-specific technical documentation
-- Mirrors source code package structure
-- Detailed technical specifications
-- Implementation details and examples
+- Technical reference documentation organized by structure
+- Contains both auto-generated and manual documentation
 
-**`docs/api/`** (renamed from `code/`)
+**`docs/reference/code/`**
 
-- Auto-generated API documentation from pdoc
-- Code reference and function signatures
+- Auto-generated code documentation from pdoc
+- Function signatures and API reference
 - Automatically updated from source code
+
+**`docs/reference/components/`**
+
+- Manual component-specific technical documentation
+- Mirrors source code package structure
+- Detailed technical specifications and implementation details
 
 **`docs/assets/`**
 
@@ -207,6 +212,82 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
 ```
+
+## Linting and Quality Standards
+
+### Pre-commit Configuration
+
+All repositories must use pre-commit hooks for consistent documentation quality.
+Create `.pre-commit-config.yaml` in your repository root:
+
+```yaml
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^docs/reference/code/  # Exclude generated docs
+      - id: end-of-file-fixer
+        exclude: ^docs/reference/code/
+      - id: check-added-large-files
+        args: ['--maxkb=1000']  # Allow larger generated docs
+        exclude: ^docs/reference/code/
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.5
+    hooks:
+      - id: forbid-tabs
+        exclude: ^docs/reference/code/
+      - id: remove-tabs
+        exclude: ^docs/reference/code/
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
+      - id: markdownlint
+        args: ['--fix']
+        files: \.(md|markdown)$
+```
+
+### Markdown Linting Rules
+
+Create `.markdownlint.yaml` for consistent markdown formatting:
+
+```yaml
+# Markdownlint configuration
+default: true
+
+# MD013 - Line length
+MD013:
+  line_length: 120
+  code_blocks: false    # Don't check code blocks
+  tables: false         # Don't check tables
+  headings: false       # Don't check headings
+
+# MD024 - Multiple headings with same content
+MD024:
+  siblings_only: true   # Allow if not siblings
+
+# MD033 - Inline HTML
+MD033:
+  allowed_elements: [br, p, div, span, a, img, code, pre]
+```
+
+### Generated Documentation Exclusions
+
+**Why exclude `docs/reference/code/`?**
+
+- pdoc generates HTML with its own formatting rules
+- We don't control tabs, whitespace, or file sizes in generated output
+- Manual fixes would be overwritten on regeneration
+- Link validation and content checks still apply
+
+**What still gets checked:**
+
+- All manually written markdown files
+- YAML configuration files
+- Python source code (via ruff, mypy)
+- Broken links in generated documentation
 
 ## In-Code Documentation Standards
 

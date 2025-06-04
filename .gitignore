@@ -97,3 +97,5 @@ docs-cache/
 # MkDocs
 /.mkdocs_cache/
 tmp/
+temp_dir/
+*/temp_dir/

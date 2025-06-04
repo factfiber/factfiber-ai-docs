@@ -339,11 +339,82 @@ Contact the documentation team to register your repository:
 3. **Access Permissions**: Specify which teams should have access
 4. **Build Configuration**: Confirm your build process works
 
+## Centralized Configuration Strategy
+
+**Important**: The FactFiber documentation portal follows a **centralized
+configuration** approach to ensure consistency and reduce maintenance overhead.
+
+### What's Centralized
+
+The main portal (`factfiber/factfiber-ai-docs`) provides:
+
+- **Theme Configuration**: Material theme settings, colors, features
+- **Plugin Configuration**: Mermaid, search, git-revision-date, minification
+- **JavaScript/CSS**: MathJax, Mermaid libraries, custom styling
+- **Build Settings**: Strict mode, directory URLs, navigation patterns
+
+### What Repositories Configure
+
+Individual repositories should keep their `mkdocs.yml` **minimal** and focused on:
+
+- **Site metadata**: `site_name`, `site_description`, `site_url`
+- **Repository info**: `repo_name`, `repo_url`, `edit_uri`
+- **Navigation structure**: Repository-specific content organization
+- **Project-specific plugins**: Only if absolutely necessary
+
+### Benefits of Centralization
+
+1. **Consistency**: All documentation looks and behaves the same
+2. **Maintenance**: Updates to themes/plugins happen in one place
+3. **Quality**: Advanced features (math, diagrams, search) work everywhere
+4. **Performance**: Optimized configurations tested at scale
+
+### Repository mkdocs.yml Template
+
+Use this **minimal template** for your repository:
+
+```yaml
+site_name: "Your Project Documentation"
+site_description: "Documentation for Your Project"
+site_url: "https://docs.factfiber.ai/projects/your-repo/"
+
+repo_name: "factfiber/your-repo"
+repo_url: "https://github.com/factfiber/your-repo"
+edit_uri: "blob/main/docs/"
+
+# Minimal theme (portal will override with full configuration)
+theme:
+  name: material
+
+# Minimal plugins (portal provides comprehensive plugin set)
+plugins:
+  - search
+
+# Basic markdown extensions (portal adds advanced features)
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+
+# Your navigation structure
+nav:
+  - Home: index.md
+  - Guide:
+      - guide/index.md
+      - Getting Started: guide/getting-started.md
+      - Architecture: guide/architecture.md
+  - Reference:
+      - reference/index.md
+  - Code Reference: reference/code/index.html
+```
+
+**Why minimal?** The portal's multirepo plugin will merge your navigation with the centralized theme, plugins, and features.
+
 ## Customization
 
 ### Theme Customization
 
-You can customize the Material theme colors and features in `mkdocs.yml`:
+If you need project-specific customization, add **only essential changes** to your `mkdocs.yml`:
 
 ```yaml
 theme:
@@ -403,7 +474,7 @@ ls src/
 poetry run python -c "import sys; print(sys.path)"
 
 # Run pdoc with verbose output
-poetry run pdoc -v -o docs/api src/
+poetry run pdoc -v -o docs/reference/code src/
 ```
 
 **2. MkDocs Build Fails**
@@ -416,11 +487,53 @@ poetry run mkdocs build --verbose
 poetry run mkdocs build --strict
 ```
 
-**3. GitHub Actions Fail**
+**3. Link Validation Issues**
+
+When your repository is imported into the central portal, you may see warnings about missing anchors or broken internal links:
+
+```
+INFO - Doc file contains a link '#missing-section', but there is no such anchor on this page.
+```
+
+**To fix these issues**:
+
+1. **Verify all internal links**: Ensure every `#anchor-link` points to an actual header
+2. **Check header formatting**: Headers must use proper markdown (`# Header`, `## Subheader`)
+3. **Validate anchor names**: Anchors are auto-generated from headers (spaces become dashes, special characters removed)
+
+```bash
+# Example: This header
+## Memory Recovery and Cleanup Testing
+
+# Creates this anchor
+#memory-recovery-and-cleanup-testing
+
+# So this link works:
+[See cleanup testing](#memory-recovery-and-cleanup-testing)
+```
+
+1. **Test locally before pushing**:
+
+```bash
+poetry run mkdocs serve
+# Navigate to your pages and click all internal links
+```
+
+**4. Git Revision Date Warnings**
+
+Warnings like `has no git logs, using current timestamp` are normal for:
+
+- Newly created files
+- Files in imported repositories (the portal creates a temporary copy)
+
+These warnings don't affect functionality.
+
+**5. GitHub Actions Fail**
 
 - Check that `pyproject.toml` includes docs dependencies
 - Verify all required files are committed
 - Check GitHub Actions logs for specific error messages
+- Ensure repository follows documentation standards exactly
 
 ### Getting Help
 

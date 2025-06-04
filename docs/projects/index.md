@@ -9,7 +9,7 @@ This section contains documentation for all FactFiber.ai projects.
 Advanced machine learning system implementing Context Graphs for real-time
 adaptive learning.
 
-**Repository:** `/home/shauncutts/src/factfiber.ai/learn/timbuktu`
+**Repository:** `https://github.com/factfiber/timbuktu`
 **Documentation:** Comprehensive technical documentation with mathematical
 notation and code examples
 

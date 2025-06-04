@@ -1,16 +1,41 @@
-# Markdownlint configuration for documentation
-# More lenient than code linting since these are docs meant for humans
+# Markdownlint configuration
+# https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
 
-# Line length - more reasonable for documentation
+# Default state for all rules
+default: true
+
+# MD013 - Line length
 MD013:
   line_length: 120
-  headings: false
-  headers: false
+  # Ignore line length for code blocks
   code_blocks: false
+  # Ignore line length for tables
   tables: false
+  # Ignore line length for headings
+  headings: false
+  # Ignore line length for HTML
+  strict: false
 
-# Allow emphasis as heading for numbered troubleshooting sections
-MD036: false
+# MD024 - Multiple headings with the same content
+MD024:
+  # Allow when headings are not siblings
+  siblings_only: true
 
-# Allow fenced code blocks without language for templates and examples
-MD040: false
+# MD033 - Inline HTML
+MD033:
+  # Allow these HTML elements
+  allowed_elements:
+    - br
+    - p
+    - div
+    - span
+    - a
+    - img
+    - code
+    - pre
+
+# MD036 - Emphasis used instead of a heading
+MD036: false  # Allow bold text that looks like headings
+
+# MD040 - Fenced code blocks should have a language specified
+MD040: false  # Disable - too many false positives with valid languages
