@@ -155,6 +155,7 @@ nav:
       - Contributing: dev/contributing.md
       - Architecture: dev/architecture.md
       - DevSpace Guide: dev/devspace-guide.md
+      - Linting Optimization: dev/linting-optimization.md
 
 watch:
   - src/

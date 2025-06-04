@@ -1,3 +1,7 @@
+# Fast pre-commit configuration (without MkDocs validation)
+# Use this for rapid development: cp .pre-commit-config-fast.yaml .pre-commit-config.yaml
+# Remember to run full validation before final commits
+
 # Minimum Python version for all hooks
 minimum_pre_commit_version: 2.15.0
 default_language_version:
@@ -49,39 +53,8 @@ repos:
         args: ['--fix']
         files: \.(md|markdown)$
 
-  - repo: local
-    hooks:
-      - id: mkdocs-validation
-        name: MkDocs validation
-        entry: bash -c 'if [ -f mkdocs.yml ]; then poetry run mkdocs build --strict --quiet; fi'
-        language: system
-        files: ^(mkdocs\.yml|docs/.*)$
-        pass_filenames: false
-
-      - id: pdoc-link-check
-        name: Check links in generated documentation
-        description: Validates links in pdoc-generated HTML files
-        entry: bash -c 'echo "Link checking for generated docs would run here (placeholder)"'
-        language: system
-        files: ^docs/reference/code/.*\.html$
-        pass_filenames: false
-
-      # - id: copyright-header
-      #   name: Copyright header check
-      #   entry: python scripts/check_copyright.py
-      #   language: python
-      #   files: \.py$
-      #   pass_filenames: true
-
-      # - id: no-print-statements
-      #   name: Check for print statements in production code
-      #   entry: >
-      #     bash -c 'if grep -r "print(" src/ --include="*.py" |
-      #     grep -v "# dev-print-ok"; then echo "Found print statements
-      #     in production code. Use logging instead."; exit 1; fi'
-      #   language: system
-      #   files: ^src/.*\.py$
-      #   pass_filenames: false
+  # MkDocs validation REMOVED for speed
+  # Run manually with: poetry run mkdocs build --strict
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.5.5
@@ -92,7 +65,6 @@ repos:
         exclude: ^docs/reference/code/
       - id: remove-tabs
         exclude: ^docs/reference/code/
-
 
   - repo: https://github.com/pycqa/isort
     rev: 6.0.1
