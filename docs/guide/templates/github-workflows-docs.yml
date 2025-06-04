@@ -1,0 +1,282 @@
+# GitHub Actions Workflow Template for Documentation
+# Save this as .github/workflows/docs.yml in your repository
+
+name: Documentation
+
+# Trigger on pushes to main branches and documentation changes
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'docs/**'
+      - 'src/**'
+      - 'mkdocs.yml'
+      - 'pyproject.toml'
+      - '.github/workflows/docs.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'src/**'
+      - 'mkdocs.yml'
+      - 'pyproject.toml'
+
+# Allow manual triggering
+  workflow_dispatch:
+
+# Set permissions for GitHub Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Ensure only one deployment runs at a time
+concurrency:
+  group: "pages-${{ github.ref }}"
+  cancel-in-progress: true
+
+jobs:
+  # Job 1: Build documentation
+  build-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout code with full history for git-based plugins
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git-revision-date plugin
+
+      # Set up Python environment
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      # Install and configure Poetry
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: 1.6.1
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      # Cache Poetry dependencies for faster builds
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: poetry-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            poetry-${{ runner.os }}-
+
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          poetry install --with docs
+
+      # Validate configuration files
+      - name: Validate MkDocs configuration
+        run: |
+          poetry run mkdocs config
+
+      # Generate code documentation with pdoc
+      - name: Generate code documentation
+        run: |
+          poetry run docs-code
+
+      # Build static documentation
+      - name: Build documentation
+        run: |
+          poetry run mkdocs build --strict
+
+      # Upload build artifacts for potential deployment
+      - name: Upload documentation artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: documentation-site
+          path: site/
+          retention-days: 7
+
+      # Upload to GitHub Pages (if main branch)
+      - name: Setup Pages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/configure-pages@v3
+
+      - name: Upload to GitHub Pages
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: actions/upload-pages-artifact@v2
+        with:
+          path: site/
+
+  # Job 2: Deploy to GitHub Pages (only on main branch)
+  deploy-pages:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: build-docs
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
+
+  # Job 3: Documentation quality checks (optional)
+  docs-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+
+      - name: Install dependencies
+        run: |
+          poetry install --with docs
+
+      # Check for broken links (optional)
+      - name: Check for broken links
+        run: |
+          # Install markdown-link-check
+          npm install -g markdown-link-check
+
+          # Check markdown files for broken links
+          find docs -name "*.md" -exec markdown-link-check {} \; || echo "Link check completed with warnings"
+
+      # Spell check (optional)
+      - name: Spell check documentation
+        run: |
+          # Install cspell
+          npm install -g cspell
+
+          # Run spell check on documentation
+          cspell "docs/**/*.md" || echo "Spell check completed with warnings"
+
+      # Documentation coverage check (optional)
+      - name: Check documentation coverage
+        run: |
+          # Run pdoc with coverage check
+          poetry run python -c "
+          import subprocess
+          import sys
+          from pathlib import Path
+
+          # Count Python files
+          py_files = list(Path('src').rglob('*.py'))
+          py_files = [f for f in py_files if not f.name.startswith('__') and not 'test' in str(f)]
+
+          # Check if code docs exist
+          code_docs = list(Path('docs/reference/code').rglob('*.html')) if Path('docs/reference/code').exists() else []
+
+          print(f'Python files: {len(py_files)}')
+          print(f'Code doc pages: {len(code_docs)}')
+
+          if len(py_files) > 0 and len(code_docs) == 0:
+              print('WARNING: No code documentation generated')
+              sys.exit(1)
+          "
+
+# ============================================================================
+# ALTERNATIVE CONFIGURATIONS
+# ============================================================================
+
+# For repositories that need custom build steps:
+#
+# - name: Custom build step
+#   run: |
+#     # Add any custom build commands here
+#     poetry run python scripts/generate_custom_docs.py
+
+# For repositories with multiple documentation sites:
+#
+# strategy:
+#   matrix:
+#     docs-site: [main, api, tutorials]
+#
+# - name: Build ${{ matrix.docs-site }} documentation
+#   run: |
+#     poetry run mkdocs build -f mkdocs-${{ matrix.docs-site }}.yml
+
+# For repositories that need Docker builds:
+#
+# - name: Build documentation with Docker
+#   run: |
+#     docker build -t docs-builder -f Dockerfile.docs .
+#     docker run --rm -v $(pwd):/workspace docs-builder
+
+# For repositories with external dependencies:
+#
+# - name: Install system dependencies
+#   run: |
+#     sudo apt-get update
+#     sudo apt-get install -y graphviz pandoc
+
+# For repositories that need environment variables:
+#
+# env:
+#   CUSTOM_VAR: ${{ secrets.CUSTOM_VAR }}
+#   BUILD_MODE: production
+
+# ============================================================================
+# TROUBLESHOOTING COMMON ISSUES
+# ============================================================================
+
+# Issue: Poetry installation fails
+# Solution: Update Poetry version or use pip fallback:
+#
+# - name: Install dependencies (fallback)
+#   if: failure()
+#   run: |
+#     pip install mkdocs mkdocs-material pdoc
+#     pip install -e .
+
+# Issue: MkDocs build fails with strict mode
+# Solution: Build without strict mode for debugging:
+#
+# - name: Build documentation (non-strict)
+#   if: failure()
+#   run: |
+#     poetry run mkdocs build --verbose
+
+# Issue: pdoc fails to generate docs
+# Solution: Debug pdoc command:
+#
+# - name: Debug pdoc generation
+#   if: failure()
+#   run: |
+#     poetry run pdoc --help
+#     poetry run python -c "import src; print('Import successful')"
+#     poetry run pdoc -v -o docs/api src/
+
+# Issue: Pages deployment fails
+# Solution: Check permissions and repository settings:
+# 1. Enable GitHub Pages in repository settings
+# 2. Set source to "GitHub Actions"
+# 3. Ensure workflow has correct permissions (see permissions section above)
+
+# ============================================================================
+# CUSTOMIZATION CHECKLIST
+# ============================================================================
+
+# Before using this workflow:
+#
+# 1. ✅ Verify your pyproject.toml has docs dependencies
+# 2. ✅ Ensure mkdocs.yml is in repository root
+# 3. ✅ Check that src/ directory contains your Python code
+# 4. ✅ Enable GitHub Pages in repository settings
+# 5. ✅ Set Pages source to "GitHub Actions"
+# 6. ✅ Update branch names if you don't use 'main'
+# 7. ✅ Customize paths if your structure is different
+# 8. ✅ Add any required environment variables or secrets
+# 9. ✅ Test workflow with a pull request first
+# 10. ✅ Monitor workflow runs for any failures

@@ -204,10 +204,10 @@ profiles:
 
 # Dependencies for DevSpace
 dependencies:
-  - name: cert-manager
+  cert-manager:
     git: https://github.com/cert-manager/cert-manager
     subPath: deploy/charts/cert-manager
-    skipDependency: true  # Optional for development
+    disabled: true  # Optional for development
 
 # Local registry for faster development (optional)
 localRegistry:

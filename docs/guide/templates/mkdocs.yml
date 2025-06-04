@@ -1,0 +1,180 @@
+# MkDocs Configuration Template for FactFiber Repositories
+# Copy this file to your repository root and customize as needed
+
+site_name: "Your Project Name Documentation"
+site_description: "Documentation for Your Project - part of FactFiber.ai"
+site_url: "https://docs.factfiber.ai/projects/your-repo-name/"
+
+# Repository information for edit links
+repo_name: "factfiber/your-repo-name"
+repo_url: "https://github.com/factfiber/your-repo-name"
+edit_uri: "blob/main/docs/"
+
+theme:
+  name: material
+
+  # Color scheme - use FactFiber blue theme
+  palette:
+    - scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+  # Material theme features
+  features:
+    - navigation.tabs          # Top-level navigation tabs
+    - navigation.sections      # Group navigation into sections
+    - navigation.expand        # Expand navigation by default
+    - navigation.top           # Back to top button
+    - navigation.instant       # Instant loading (SPA-like)
+    - navigation.tracking      # URL updates as you scroll
+    - search.highlight         # Highlight search terms
+    - search.share            # Share search results
+    - search.suggest          # Search suggestions
+    - content.code.copy       # Copy code button
+    - content.action.edit     # Edit this page button
+    - content.tooltips        # Improved tooltips
+    - toc.follow              # Follow table of contents
+
+  # Custom favicon (optional)
+  # favicon: assets/images/favicon.png
+
+  # Custom logo (optional)
+  # logo: assets/images/logo.png
+
+# Plugins configuration
+plugins:
+  # Search plugin with enhanced configuration
+  - search:
+      separator: '[\s\-,:!=\[\]()"`/]+|\.(?!\d)|&[lg]t;|(?!\b)(?=[A-Z][a-z])'
+      lang: en
+
+  # Mermaid diagrams
+  - mermaid2:
+      arguments:
+        theme: |
+          ^(JSON.parse(__md_get("__palette").index == 1)) ?
+          'dark' : 'default'
+
+  # Git information (optional - shows last updated dates)
+  - git-revision-date-localized:
+      type: date
+      enable_creation_date: true
+
+  # Minification for production (optional)
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
+      htmlmin_opts:
+        remove_comments: true
+
+# Markdown extensions
+markdown_extensions:
+  # Standard extensions
+  - admonition              # !!! callout boxes
+  - attr_list              # Add HTML attributes to elements
+  - def_list               # Definition lists
+  - footnotes              # Footnote support
+  - meta                   # YAML front matter
+  - md_in_html             # Markdown inside HTML
+  - tables                 # Table support
+  - toc:                   # Table of contents
+      permalink: true
+      toc_depth: 3
+
+  # Code highlighting
+  - codehilite:
+      guess_lang: false
+      use_pygments: true
+
+  # PyMdown Extensions for enhanced features
+  - pymdownx.arithmatex:    # Math support
+      generic: true
+  - pymdownx.betterem:      # Better emphasis
+      smart_enable: all
+  - pymdownx.caret          # Super/subscript with ^^text^^
+  - pymdownx.mark           # Highlighting with ==text==
+  - pymdownx.tilde          # Strikethrough with ~~text~~
+  - pymdownx.details        # Collapsible details
+  # - pymdownx.emoji:         # Emoji support (uncomment if needed)
+  #     emoji_index: !!python/name:material.extensions.emoji.twemoji
+  #     emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.inlinehilite   # Inline code highlighting
+  - pymdownx.keys           # Keyboard keys styling
+  - pymdownx.smartsymbols   # Smart symbols
+  - pymdownx.superfences:   # Enhanced code blocks
+      # custom_fences:        # Uncomment for Mermaid support
+      #   - name: mermaid
+      #     class: mermaid
+      #     format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:        # Tabbed content
+      alternate_style: true
+  - pymdownx.tasklist:      # Task lists with checkboxes
+      custom_checkbox: true
+
+# External JavaScript for enhanced features
+extra_javascript:
+  # MathJax for mathematical notation
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+  - javascripts/mathjax.js
+
+# External CSS (optional)
+extra_css:
+  - stylesheets/extra.css
+
+# Extra configuration
+extra:
+  # Social links (customize for your project)
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/factfiber/your-repo-name
+    - icon: fontawesome/solid/globe
+      link: https://factfiber.ai
+
+  # Version selector (if you have multiple versions)
+  version:
+    provider: mike
+
+  # Analytics (optional - uncomment and set environment variable)
+  # analytics:
+  #   provider: google
+  #   property: !ENV GOOGLE_ANALYTICS_KEY
+
+# Navigation structure
+nav:
+  - Home: index.md
+
+  - User Guide:
+      - guide/index.md
+      - Getting Started: guide/getting-started.md
+      - Architecture: guide/architecture.md
+      - Development: guide/development.md
+      - Documentation Standards: guide/documentation_standards.md
+
+  - Technical Reference:
+      - reference/index.md
+      - Components:
+        # Add your package-specific documentation here
+        # Example:
+        # - Core Package:
+        #   - reference/components/your_package/index.md
+        #   - reference/components/your_package/core.md
+      - Code Reference: reference/code/index.html
+
+# Additional configuration
+strict: true              # Fail build on warnings
+use_directory_urls: true  # Pretty URLs
+
+# Watch additional directories during development
+watch:
+  - src/                  # Watch source code for docstring changes

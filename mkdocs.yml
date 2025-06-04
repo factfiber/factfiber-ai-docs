@@ -119,6 +119,11 @@ nav:
       - Getting Started: dev/getting-started.md
       - Contributing: dev/contributing.md
       - Architecture: dev/architecture.md
+      - DevSpace Guide: dev/devspace-guide.md
+  - Documentation Guide:
+      - Documentation Organization: guide/documentation_organization.md
+      - Documentation Standards: guide/documentation_standards.md
+      - Repository Onboarding: guide/repository_onboarding.md
 
 watch:
   - src/

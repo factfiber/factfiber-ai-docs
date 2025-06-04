@@ -1,6 +1,8 @@
 # DevSpace profiles for different development scenarios
 # Imported by main devspace.yaml
 
+version: v2beta1
+
 profiles:
   # Production-like development environment
   - name: staging

@@ -1,0 +1,16 @@
+# Markdownlint configuration for documentation
+# More lenient than code linting since these are docs meant for humans
+
+# Line length - more reasonable for documentation
+MD013:
+  line_length: 120
+  headings: false
+  headers: false
+  code_blocks: false
+  tables: false
+
+# Allow emphasis as heading for numbered troubleshooting sections
+MD036: false
+
+# Allow fenced code blocks without language for templates and examples
+MD040: false

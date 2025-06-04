@@ -8,7 +8,8 @@
 
     **🚨 AUTHENTICATION REQUIRED - DO NOT SERVE PUBLICLY**
 
-Welcome to the centralized documentation hub for FactFiber.ai projects and systems.
+Welcome to the centralized documentation hub for FactFiber.ai projects and
+systems.
 
 ## 🚀 **Featured Projects**
 
@@ -31,6 +32,10 @@ adaptive learning with CUDA acceleration.
 - **[Projects](projects/)** - Detailed documentation for all FactFiber.ai projects
 - **[API Reference](api/)** - Comprehensive API documentation and code references
 - **[Development](dev/)** - Developer guides, architecture, and contribution guidelines
+- **[Documentation Standards](guide/documentation_standards.md)** - Standards
+  for repository documentation
+- **[Repository Onboarding](guide/repository_onboarding.md)** - Guide for
+  adding new repositories
 
 ## 🔍 **Quick Navigation**
 
