@@ -10,6 +10,12 @@ documentation sets, significantly slowing down the commit process. This is
 especially frustrating when making small code changes that don't affect
 documentation.
 
+## Default Configuration
+
+**As of this update, the optimized incremental validation mode is the default.**
+This provides the best balance between speed and validation coverage for most
+developers.
+
 ## Available Solutions
 
 ### 1. Fast Pre-commit Mode (Recommended for Development)
@@ -39,21 +45,22 @@ make docs-validate
 - Must remember to validate docs before pushing
 - Could miss documentation build errors
 
-### 2. Incremental Validation Mode (Balanced Approach)
+### 2. Incremental Validation Mode (Default)
 
-Uses smart detection to only run MkDocs when documentation files change:
+**This is now the default mode.** Uses smart detection to only run MkDocs when
+documentation files change:
 
 ```bash
-# Switch to optimized mode
-make pre-commit-opt
-
-# Commits run fast when only Python files change
+# This is the default behavior now
 git add src/module.py
 git commit -m "fix: resolve issue"  # Fast - skips MkDocs
 
 # Commits validate when docs change
 git add docs/guide.md
 git commit -m "docs: update guide"  # Runs MkDocs validation
+
+# To explicitly ensure you're using this mode
+make pre-commit-opt
 ```
 
 **Pros:**
@@ -61,6 +68,7 @@ git commit -m "docs: update guide"  # Runs MkDocs validation
 - Automatic detection of when validation is needed
 - Fast for code-only changes
 - Still validates when it matters
+- Best balance for most development
 
 **Cons:**
 
@@ -125,10 +133,11 @@ make pre-commit-full
 
 | Command | Time | Use Case |
 |---------|------|----------|
-| `make lint-fast` | ~5s | Quick check during development |
-| `make lint-python` | ~3s | Python-only validation |
-| `make docs-validate` | ~30s | Manual MkDocs check |
-| `make lint` | ~35s | Full validation before push |
+| `make lint` | Variable | Default - smart incremental validation |
+| `make lint-fast` | ~3s | Quick check, no MkDocs |
+| `make lint-full` | ~35s | Always runs full MkDocs validation |
+| `make lint-python` | ~2s | Python-only validation |
+| `make docs-validate` | ~30s | Manual MkDocs check only |
 
 ## Environment Variables
 
@@ -179,9 +188,10 @@ locally.
 
 ## Summary
 
-- **Development**: Use `make pre-commit-fast` for speed
-- **Before Push**: Run `make docs-validate`
-- **Documentation Work**: Use `make pre-commit-opt`
-- **Releases**: Use `make pre-commit-full`
+- **Default**: Smart incremental validation (already configured)
+- **Rapid Development**: Use `make lint-fast` for maximum speed
+- **Before Push**: Run `make lint-full` or `make docs-validate`
+- **Releases**: Use `make pre-commit-full` for complete validation
 
-This approach balances development speed with documentation quality assurance.
+The default configuration now provides the best balance between development
+speed and documentation quality assurance.

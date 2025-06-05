@@ -7,15 +7,16 @@ help:
     @echo "FactFiber Documentation Infrastructure - Development Commands"
     @echo ""
     @echo "Linting & Validation:"
-    @echo "  make lint          - Run full pre-commit validation (including MkDocs)"
+    @echo "  make lint          - Run pre-commit validation (smart incremental MkDocs)"
     @echo "  make lint-fast     - Run fast pre-commit (no MkDocs validation)"
+    @echo "  make lint-full     - Run full pre-commit (always validate MkDocs)"
     @echo "  make lint-python   - Run only Python linting (ruff, mypy)"
     @echo "  make docs-validate - Run only MkDocs validation"
     @echo ""
     @echo "Pre-commit Management:"
     @echo "  make pre-commit-fast - Switch to fast pre-commit config"
     @echo "  make pre-commit-full - Switch to full pre-commit config"
-    @echo "  make pre-commit-opt  - Switch to optimized incremental config"
+    @echo "  make pre-commit-opt  - Switch to optimized incremental config (default)"
     @echo ""
     @echo "Development:"
     @echo "  make docs-serve  - Start MkDocs development server"
@@ -27,7 +28,7 @@ help:
     @echo "  make test        - Run all tests"
     @echo "  make test-unit   - Run unit tests only"
 
-# Full linting with MkDocs validation
+# Linting with smart incremental MkDocs validation (default)
 lint:
     poetry run pre-commit run --all-files
 
@@ -40,6 +41,16 @@ lint-fast:
     @poetry run pre-commit run --all-files || true
     @mv .pre-commit-config.yaml.bak .pre-commit-config.yaml
     @echo "✅ Fast linting complete"
+
+# Full linting with MkDocs validation (always runs MkDocs)
+lint-full:
+    @echo "🔍 Running full linting (always validate MkDocs)..."
+    @cp .pre-commit-config-full.yaml .pre-commit-config.yaml.tmp
+    @mv .pre-commit-config.yaml .pre-commit-config.yaml.bak
+    @mv .pre-commit-config.yaml.tmp .pre-commit-config.yaml
+    @poetry run pre-commit run --all-files || true
+    @mv .pre-commit-config.yaml.bak .pre-commit-config.yaml
+    @echo "✅ Full linting complete"
 
 # Python-only linting
 lint-python:
@@ -64,14 +75,14 @@ pre-commit-fast:
 # Switch to full pre-commit configuration
 pre-commit-full:
     @echo "🔧 Switching to full pre-commit configuration..."
-    @git checkout .pre-commit-config.yaml
-    @echo "✅ Now using full pre-commit (with MkDocs validation)"
+    @cp .pre-commit-config-full.yaml .pre-commit-config.yaml
+    @echo "✅ Now using full pre-commit (always validates MkDocs)"
 
-# Switch to optimized incremental configuration
+# Switch to optimized incremental configuration (default)
 pre-commit-opt:
     @echo "🎯 Switching to optimized incremental pre-commit configuration..."
     @cp .pre-commit-config-optimized.yaml .pre-commit-config.yaml
-    @echo "✅ Now using optimized pre-commit (incremental MkDocs validation)"
+    @echo "✅ Now using optimized pre-commit (incremental MkDocs validation - default)"
 
 # Documentation development
 docs-serve:

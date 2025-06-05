@@ -31,9 +31,15 @@ def should_run_mkdocs_validation(changed_files: list[str]) -> bool:
         "mkdocs.yml",
         "mkdocs-unified.yml",
         ".github/workflows/docs.yml",
-        "docs/",  # Any documentation changes
         "pyproject.toml",  # Dependency changes might affect plugins
     ]
+
+    # Check for documentation directory changes (more precise)
+    for file in changed_files:
+        if file.startswith("docs/") and not file.startswith(
+            "docs/reference/code/"
+        ):
+            return True
 
     for file in changed_files:
         for pattern in validation_patterns:
