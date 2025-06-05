@@ -55,13 +55,13 @@ repos:
   - repo: local
     hooks:
       # Incremental MkDocs validation - only runs when docs change
-      - id: mkdocs-incremental-validation
-        name: MkDocs validation (incremental)
-        entry: python scripts/mkdocs-incremental-check.py
-        language: python
-        language_version: python3.13
+      - id: mkdocs-incremental
+        name: MkDocs incremental validation
+        entry: python scripts/mkdocs-incremental-wrapper.py validate --incremental --strict
+        language: system
+        files: '^docs/.*\.md$|^mkdocs\.yml$'
         pass_filenames: false
-        always_run: true
+        description: 'Validate MkDocs documentation incrementally'
 
       - id: pdoc-link-check
         name: Check links in generated documentation

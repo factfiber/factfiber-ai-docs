@@ -1,4 +1,4 @@
-# Production environment for FactFiber documentation
+# Development environment for FactFiber documentation
 
 terraform {
   required_version = ">= 1.5.0"
@@ -12,13 +12,13 @@ terraform {
 
   # Backend configuration for state storage
   backend "s3" {
-    profile        = "fc-aws-infra"
-    bucket         = "ff-crypto-tf-state"
+    profile = "fc-aws-infra"
+    bucket  = "ff-crypto-tf-state"
     # repo/component/stage
-    key            = "factfiber.ai/factfiber-ai-docs/prod"
-    region         = "us-east-1"
-    encrypt        = true
+    key            = "factfiber.ai/factfiber-ai-docs/dev"
     dynamodb_table = "ff-crypto-tf-state-lock"
+    region  = "us-east-1"
+    encrypt = true
   }
 }
 
@@ -44,7 +44,7 @@ provider "aws" {
 }
 
 locals {
-  environment = "prod"
+  environment = "dev"
 
   common_tags = {
     Project     = "factfiber-docs"

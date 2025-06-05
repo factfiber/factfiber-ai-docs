@@ -74,8 +74,8 @@ check_prerequisites() {
 create_terraform_backend() {
     log "Creating Terraform backend resources..."
 
-    BACKEND_BUCKET="factfiber-terraform-state"
-    BACKEND_TABLE="factfiber-terraform-locks"
+    BACKEND_BUCKET="ff-crypto-tf-state"
+    BACKEND_TABLE="ff-crypto-tf-state-lock"
 
     # Check if bucket exists
     if aws s3api head-bucket --bucket "${BACKEND_BUCKET}" --profile "${AWS_PROFILE}" 2> /dev/null; then
