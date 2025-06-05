@@ -3,6 +3,17 @@
 This file provides guidance to Claude Code (claude.ai/code) when working
 with code in this repository.
 
+## Active Issues and Tasks
+
+**IMPORTANT**: For current issues and active investigations, see `tmp/issues/CLAUDE.md`
+
+This file tracks:
+
+- Active issues being worked on
+- Associated documentation and test files
+- Current investigation status
+- Next steps for each issue
+
 ## Current Working State
 
 ### Sprint 4: Authentication & Security - COMPLETED ✅
