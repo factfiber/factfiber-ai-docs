@@ -82,7 +82,7 @@ The FactFiber Documentation Infrastructure is a centralized multi-repository doc
 
    ```bash
    # Apply Kubernetes manifests
-   kubectl apply -f k8s/
+   kubectl apply -f kubernetes/manifests/
    ```
 
 ## Usage

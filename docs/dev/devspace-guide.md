@@ -361,7 +361,7 @@ deployments:
   my-service:
     kubectl:
       manifests:
-        - k8s/my-service.yaml
+        - kubernetes/manifests/my-service.yaml
 ```
 
 ### Production Deployment

@@ -37,12 +37,12 @@ deployments:
   ff-docs-app:
     kubectl:
       manifests:
-        - k8s/namespace.yaml
-        - k8s/configmap.yaml
-        - k8s/secret.yaml
-        - k8s/deployment.yaml
-        - k8s/service.yaml
-        - k8s/ingress.yaml
+        - kubernetes/manifests/namespace.yaml
+        - kubernetes/manifests/configmap.yaml
+        - kubernetes/manifests/secret.yaml
+        - kubernetes/manifests/deployment.yaml
+        - kubernetes/manifests/service.yaml
+        - kubernetes/manifests/ingress.yaml
 
 # Development configuration
 dev:
@@ -158,9 +158,9 @@ profiles:
         oauth2-proxy:
           kubectl:
             manifests:
-              - k8s/oauth2-proxy-deployment.yaml
-              - k8s/oauth2-proxy-service.yaml
-              - k8s/oauth2-proxy-configmap.yaml
+              - kubernetes/oauth2-proxy/oauth2-proxy-deployment.yaml
+              - kubernetes/oauth2-proxy/oauth2-proxy-service.yaml
+              - kubernetes/oauth2-proxy/k8s-oauth2-proxy.yaml
       dev:
         oauth2-proxy:
           imageSelector: quay.io/oauth2-proxy/oauth2-proxy
@@ -176,14 +176,14 @@ profiles:
         postgres:
           kubectl:
             manifests:
-              - k8s/postgres-deployment.yaml
-              - k8s/postgres-service.yaml
-              - k8s/postgres-pvc.yaml
+              - kubernetes/manifests/postgres-deployment.yaml
+              - kubernetes/manifests/postgres-service.yaml
+              - kubernetes/manifests/postgres-pvc.yaml
         redis:
           kubectl:
             manifests:
-              - k8s/redis-deployment.yaml
-              - k8s/redis-service.yaml
+              - kubernetes/manifests/redis-deployment.yaml
+              - kubernetes/manifests/redis-service.yaml
       dev:
         postgres:
           imageSelector: postgres:15

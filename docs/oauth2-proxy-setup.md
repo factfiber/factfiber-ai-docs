@@ -211,7 +211,7 @@ This tests:
 3. **Deploy to Kubernetes**:
 
    ```bash
-   kubectl apply -f k8s-oauth2-proxy.yaml
+   kubectl apply -f kubernetes/oauth2-proxy/k8s-oauth2-proxy.yaml
    ```
 
 ### Production Considerations

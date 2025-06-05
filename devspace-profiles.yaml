@@ -28,7 +28,7 @@ profiles:
     patches:
       - op: add
         path: deployments.ff-docs-app.kubectl.manifests.-
-        value: k8s/resource-limits.yaml
+        value: kubernetes/manifests/resource-limits.yaml
       - op: replace
         path: dev.app.env
         value:
@@ -75,10 +75,10 @@ profiles:
         value:
           kubectl:
             manifests:
-              - k8s/oauth2-proxy-deployment.yaml
-              - k8s/oauth2-proxy-service.yaml
-              - k8s/oauth2-proxy-configmap.yaml
-              - k8s/tls-certificate.yaml
+              - kubernetes/oauth2-proxy/oauth2-proxy-deployment.yaml
+              - kubernetes/oauth2-proxy/oauth2-proxy-service.yaml
+              - kubernetes/manifests/oauth2-proxy-configmap.yaml
+              - kubernetes/manifests/tls-certificate.yaml
       - op: add
         path: dev.oauth2-proxy
         value:
