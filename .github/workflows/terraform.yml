@@ -1,0 +1,180 @@
+name: Terraform Infrastructure
+
+on:
+  pull_request:
+    paths:
+      - 'aws/terraform/**'
+      - '.github/workflows/terraform.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'aws/terraform/**'
+      - '.github/workflows/terraform.yml'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to plan/apply'
+        required: true
+        default: 'prod'
+        type: choice
+        options:
+          - prod
+          - dev
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'plan'
+        type: choice
+        options:
+          - plan
+          - apply
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  terraform-check:
+    name: Terraform Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Terraform Format Check
+        run: |
+          terraform fmt -check -recursive aws/terraform/
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Terraform Init (Prod)
+        working-directory: aws/terraform/environments/prod
+        run: terraform init -backend=false
+
+      - name: Terraform Validate (Prod)
+        working-directory: aws/terraform/environments/prod
+        run: terraform validate
+
+      - name: Terraform Init (Dev)
+        working-directory: aws/terraform/environments/dev
+        run: terraform init -backend=false
+
+      - name: Terraform Validate (Dev)
+        working-directory: aws/terraform/environments/dev
+        run: terraform validate
+
+  terraform-plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    needs: terraform-check
+    if: github.event_name == 'pull_request' || github.event.inputs.action == 'plan'
+    strategy:
+      matrix:
+        environment: [prod, dev]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Terraform Init
+        working-directory: aws/terraform/environments/${{ matrix.environment }}
+        run: terraform init
+
+      - name: Terraform Plan
+        working-directory: aws/terraform/environments/${{ matrix.environment }}
+        run: |
+          terraform plan -out=tfplan
+          terraform show -no-color tfplan > plan.txt
+
+      - name: Upload Plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-${{ matrix.environment }}
+          path: aws/terraform/environments/${{ matrix.environment }}/plan.txt
+
+      - name: Comment PR (if applicable)
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const plan = fs.readFileSync('aws/terraform/environments/${{ matrix.environment }}/plan.txt', 'utf8');
+            const output = `#### Terraform Plan - ${{ matrix.environment }} environment
+            <details><summary>Show Plan</summary>
+
+            \`\`\`terraform
+            ${plan}
+            \`\`\`
+
+            </details>`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+    needs: terraform-check
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event.inputs.action == 'apply')
+    environment: ${{ github.event.inputs.environment || 'prod' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_TERRAFORM_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Terraform Init
+        working-directory: aws/terraform/environments/${{ github.event.inputs.environment || 'prod' }}
+        run: terraform init
+
+      - name: Terraform Apply
+        working-directory: aws/terraform/environments/${{ github.event.inputs.environment || 'prod' }}
+        run: terraform apply -auto-approve
+
+      - name: Save Outputs
+        working-directory: aws/terraform/environments/${{ github.event.inputs.environment || 'prod' }}
+        run: |
+          terraform output -json > outputs.json
+          echo "Infrastructure outputs saved"
+
+      - name: Upload Outputs
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-outputs-${{ github.event.inputs.environment || 'prod' }}
+          path: aws/terraform/environments/${{ github.event.inputs.environment || 'prod' }}/outputs.json

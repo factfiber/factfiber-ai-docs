@@ -125,8 +125,42 @@ The system supports multiple patterns for aggregating documentation:
 ### Deployment
 
 - **Development**: DevSpace with hot-reloading ✅
-- **Production**: Kubernetes with Helm charts
+- **Production**:
+  - AWS: S3 + CloudFront with Lambda@Edge authentication
+  - Kubernetes: With Helm charts (alternative deployment)
 - **CI/CD**: GitHub Actions workflows
+
+## AWS Infrastructure
+
+The project includes Terraform configuration for AWS deployment:
+
+### Components
+
+- **S3 Buckets**: Static site hosting with versioning
+- **CloudFront**: Global CDN with custom error pages
+- **Lambda@Edge**: GitHub OAuth authentication
+- **DynamoDB**: Terraform state locking
+- **CloudWatch**: Monitoring and alerts
+
+### Quick AWS Setup
+
+    # 1. Create DynamoDB table for state locking
+    ./aws/scripts/create-dynamodb-table.sh
+
+    # 2. Configure Terraform
+    cd aws/terraform/environments/prod
+    cp terraform.tfvars.example terraform.tfvars
+    # Edit terraform.tfvars with your values
+
+    # 3. Deploy infrastructure
+    terraform init
+    terraform plan
+    terraform apply
+
+    # 4. Deploy documentation
+    ./aws/scripts/deploy.sh prod
+
+See `aws/docs/setup-guide.md` for detailed instructions.
 
 ## Contributing
 
