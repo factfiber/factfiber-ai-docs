@@ -1,0 +1,29 @@
+# Example Terraform variables file for production
+# Copy to terraform.tfvars and fill in the actual values
+
+# GitHub OAuth App credentials
+github_client_id     = "your-github-oauth-client-id"
+github_client_secret = "your-github-oauth-client-secret"
+
+# GitHub organization settings
+github_org = "factfiber"
+allowed_teams = [
+  "platform-team",
+  "docs-team",
+  "admin-team",
+  "developers"
+]
+
+# Custom domain configuration
+domain_aliases = ["docs.factfiber.ai"]
+
+# ACM certificate ARN (must be in us-east-1)
+# Leave empty to use CloudFront default certificate
+acm_certificate_arn = ""
+
+# Alert configuration
+alert_email = "platform-team@factfiber.ai"
+
+# AWS settings
+aws_region  = "us-east-1"
+aws_profile = "fc-aws-infra"
