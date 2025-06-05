@@ -23,7 +23,7 @@ docs-build = "mkdocs build"
 docs-clean = "bash -c 'rm -rf docs/reference/code/* site/*'"
 
 [tool.poetry.dependencies]
-python = "^3.13"
+python = ">=3.13,<3.14"
 # Core MkDocs and Material theme
 mkdocs = "^1.6.0"
 mkdocs-material = "^9.5.0"
@@ -81,8 +81,9 @@ types-requests = "^2.31.0"
 types-click = "^7.1.8"
 types-aiofiles = "^24.1.0.20250516"
 # Development tools
-ipython = "^8.15.0"
+ipython = "^9.3.0"
 jupyterlab = "^4.0.0"
+ingolstadt = {git = "https://github.com/factfiber/ingolstadt.git"}
 
 [tool.poetry.group.deploy.dependencies]
 # Kubernetes deployment

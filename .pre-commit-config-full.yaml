@@ -51,12 +51,13 @@ repos:
 
   - repo: local
     hooks:
-      - id: mkdocs-validation
-        name: MkDocs validation
-        entry: bash -c 'if [ -f mkdocs.yml ]; then poetry run mkdocs build --strict --quiet; fi'
+      - id: mkdocs-incremental-full
+        name: MkDocs full validation
+        entry: poetry run mkdocs-incremental validate --full --strict
         language: system
         files: ^(mkdocs\.yml|docs/.*)$
         pass_filenames: false
+        description: 'Full validation of all MkDocs documentation'
 
       - id: pdoc-link-check
         name: Check links in generated documentation
