@@ -97,6 +97,17 @@ module "cloudfront" {
   tags                          = local.common_tags
 }
 
+# Route53 DNS configuration (cross-account)
+module "route53" {
+  source = "../../modules/route53"
+
+  cloudfront_domain_name    = module.cloudfront.distribution_domain_name
+  cloudfront_hosted_zone_id = module.cloudfront.distribution_hosted_zone_id
+  cross_account_role_arn    = var.route53_cross_account_role_arn
+  external_id               = var.route53_external_id
+  create_www_redirect       = false
+}
+
 # SNS topic for alerts
 resource "aws_sns_topic" "alerts" {
   name         = "factfiber-docs-${local.environment}-alerts"
@@ -143,4 +154,9 @@ output "cloudfront_domain_name" {
 output "github_actions_role_arn" {
   description = "ARN of the IAM role for GitHub Actions"
   value       = module.github_actions_role.role_arn
+}
+
+output "docs_custom_domain" {
+  description = "Custom domain for documentation"
+  value       = "https://docs.factfiber.ai"
 }

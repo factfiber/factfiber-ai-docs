@@ -56,3 +56,14 @@ variable "alert_email" {
   description = "Email address for CloudWatch alerts"
   type        = string
 }
+
+variable "route53_cross_account_role_arn" {
+  description = "ARN of the cross-account role in the Route53 account"
+  type        = string
+}
+
+variable "route53_external_id" {
+  description = "External ID for Route53 cross-account access"
+  type        = string
+  default     = "factfiber-docs-route53-access"
+}

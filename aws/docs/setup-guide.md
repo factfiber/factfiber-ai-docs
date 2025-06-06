@@ -19,7 +19,19 @@ aws sts get-caller-identity --profile fc-aws-infra
 aws s3 ls --profile fc-aws-infra
 ```
 
-## Step 2: Create DynamoDB Table for State Locking
+## Step 2: Set Up Route53 Cross-Account Access
+
+Since Route53 is in a different AWS account (k8), we need to set up cross-account access:
+
+```bash
+# Run the setup script with k8 profile
+./aws/scripts/setup-route53-cross-account.sh
+```
+
+This creates an IAM role in the Route53 account that allows the infrastructure account to manage DNS records.
+Note the Role ARN output - you'll need it for Terraform variables.
+
+## Step 3: Create DynamoDB Table for State Locking
 
 The Terraform state is stored in the existing `ff-crypto-tf-state` bucket. We need to create a DynamoDB table for state locking:
 
@@ -34,7 +46,7 @@ This creates the `ff-crypto-tf-state-lock` table with:
 - Proper tagging for cost allocation
 - LockID as the hash key
 
-## Step 3: Prepare Terraform Variables
+## Step 4: Prepare Terraform Variables
 
 ### For Production Environment
 
@@ -55,6 +67,7 @@ Required variables:
 - `github_org` - Your GitHub organization (e.g., "factfiber")
 - `allowed_teams` - List of GitHub teams with access
 - `alert_email` - Email for CloudWatch alerts
+- `route53_cross_account_role_arn` - ARN from Step 2 setup script output
 
 ### For Development Environment
 
@@ -66,7 +79,7 @@ cp terraform.tfvars.example terraform.tfvars
 vim terraform.tfvars
 ```
 
-## Step 4: Initialize Terraform
+## Step 5: Initialize Terraform
 
 ### Production Environment
 
@@ -94,7 +107,7 @@ cd aws/terraform/environments/dev
 terraform init
 ```
 
-## Step 5: Review Infrastructure Plan
+## Step 6: Review Infrastructure Plan
 
 ```bash
 # Review what will be created
@@ -113,7 +126,7 @@ Review the plan carefully. It should create:
 - CloudWatch alarms
 - SNS topic for alerts
 
-## Step 6: Deploy Infrastructure
+## Step 7: Deploy Infrastructure
 
 ```bash
 # Apply the saved plan
@@ -123,7 +136,7 @@ terraform apply tfplan
 terraform apply
 ```
 
-## Step 7: Configure GitHub Repository
+## Step 8: Configure GitHub Repository
 
 After deployment, add these secrets to your GitHub repository:
 
@@ -140,7 +153,7 @@ DOCS_S3_BUCKET          # From docs_bucket_name output
 CLOUDFRONT_DISTRIBUTION_ID  # From cloudfront_distribution_id output
 ```
 
-## Step 8: Test the Deployment
+## Step 9: Test the Deployment
 
 ### Test S3 Access
 
@@ -181,7 +194,14 @@ aws logs tail /aws/lambda/us-east-1.factfiber-prod-docs-auth \
     --follow
 ```
 
-## Step 9: Deploy Documentation
+## Step 10: Deploy Documentation
+
+### Access Documentation
+
+Once deployed, your documentation will be available at:
+
+- CloudFront URL: `https://<distribution-id>.cloudfront.net`
+- Custom domain: `https://docs.factfiber.ai` (after DNS propagation)
 
 ### Manual Deployment
 
