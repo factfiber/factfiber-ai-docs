@@ -17,7 +17,7 @@ packages = [{include = "ff_docs", from = "src"}]
 [tool.poetry.scripts]
 ff-docs = "ff_docs.cli:main"
 ff-docs-server = "ff_docs.server:run_server"
-docs-code = "bash -c 'pdoc -o docs/reference/code --math --mermaid src/ff_docs'"
+docs-code = "bash -c 'pdoc -o docs/reference/code --math --mermaid --docformat google --include-undocumented src/ff_docs'"
 docs-serve = "mkdocs serve --dev-addr 0.0.0.0:8000"
 docs-build = "mkdocs build"
 docs-clean = "bash -c 'rm -rf docs/reference/code/* site/*'"

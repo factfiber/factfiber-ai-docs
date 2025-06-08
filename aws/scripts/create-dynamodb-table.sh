@@ -4,7 +4,7 @@
 set -euo pipefail
 
 # Configuration
-AWS_PROFILE="fc-aws-infra"
+AWS_PROFILE="factfiber-docs-deploy"
 AWS_REGION="us-east-1"
 TABLE_NAME="ff-crypto-tf-state-lock"
 

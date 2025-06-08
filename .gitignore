@@ -99,3 +99,21 @@ docs-cache/
 tmp/
 temp_dir/
 */temp_dir/
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+crash.*.log
+
+# Lambda function artifacts
+aws/terraform/modules/lambda-edge/lambda-auth.zip
+aws/terraform/modules/lambda-edge-config/lambda-auth-configured.zip
+aws/terraform/modules/lambda-edge-config/generated/
+
+# Temporary configuration files
+route53-change-batch.json

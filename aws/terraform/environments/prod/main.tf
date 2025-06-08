@@ -12,7 +12,7 @@ terraform {
 
   # Backend configuration for state storage
   backend "s3" {
-    profile        = "fc-aws-infra"
+    profile        = "factfiber-docs-deploy"
     bucket         = "ff-crypto-tf-state"
     # repo/component/stage
     key            = "factfiber.ai/factfiber-ai-docs/prod"
@@ -77,6 +77,8 @@ module "lambda_edge" {
   github_client_secret = var.github_client_secret
   github_org          = var.github_org
   allowed_teams       = var.allowed_teams
+  jwt_secret          = var.jwt_secret
+  cookie_domain       = var.cookie_domain
   alarm_sns_topic_arn = aws_sns_topic.alerts.arn
   tags                = local.common_tags
 }
@@ -91,22 +93,23 @@ module "cloudfront" {
   logs_bucket_domain_name        = module.s3.logs_bucket_domain_name
   domain_aliases                 = var.domain_aliases
   acm_certificate_arn           = var.acm_certificate_arn
-  lambda_edge_enabled           = true
-  lambda_edge_arn               = module.lambda_edge.lambda_arn
+  lambda_edge_enabled           = false
+  lambda_edge_arn               = ""
   alarm_sns_topic_arn           = aws_sns_topic.alerts.arn
   tags                          = local.common_tags
 }
 
 # Route53 DNS configuration (cross-account)
-module "route53" {
-  source = "../../modules/route53"
-
-  cloudfront_domain_name    = module.cloudfront.distribution_domain_name
-  cloudfront_hosted_zone_id = module.cloudfront.distribution_hosted_zone_id
-  cross_account_role_arn    = var.route53_cross_account_role_arn
-  external_id               = var.route53_external_id
-  create_www_redirect       = false
-}
+# Temporarily disabled - will add DNS record manually after infrastructure is deployed
+# module "route53" {
+#   source = "../../modules/route53"
+#
+#   cloudfront_domain_name    = module.cloudfront.distribution_domain_name
+#   cloudfront_hosted_zone_id = module.cloudfront.distribution_hosted_zone_id
+#   cross_account_role_arn    = var.route53_cross_account_role_arn
+#   external_id               = var.route53_external_id
+#   create_www_redirect       = false
+# }
 
 # SNS topic for alerts
 resource "aws_sns_topic" "alerts" {

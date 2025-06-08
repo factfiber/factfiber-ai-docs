@@ -67,3 +67,16 @@ variable "route53_external_id" {
   type        = string
   default     = "factfiber-docs-route53-access"
 }
+
+variable "jwt_secret" {
+  description = "Secret key for JWT token signing"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "cookie_domain" {
+  description = "Domain for authentication cookies"
+  type        = string
+  default     = ".factfiber.ai"
+}

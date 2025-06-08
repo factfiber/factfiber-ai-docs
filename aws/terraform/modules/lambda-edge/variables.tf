@@ -55,6 +55,19 @@ variable "alarm_sns_topic_arn" {
   default     = ""
 }
 
+variable "jwt_secret" {
+  description = "Secret key for JWT token signing"
+  type        = string
+  sensitive   = true
+  default     = ""
+}
+
+variable "cookie_domain" {
+  description = "Domain for authentication cookies"
+  type        = string
+  default     = ".factfiber.ai"
+}
+
 variable "tags" {
   description = "Tags to apply to all resources"
   type        = map(string)

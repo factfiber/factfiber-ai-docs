@@ -134,6 +134,7 @@ nav:
       - Architecture: guide/architecture.md
       - Development: guide/development.md
       - Documentation Standards: guide/documentation_standards.md
+      - pdoc Standards: guide/pdoc-standards.md
       - Documentation Organization: guide/documentation_organization.md
       - Repository Onboarding: guide/repository_onboarding.md
 
@@ -143,6 +144,18 @@ nav:
 
   - API Reference:
       - FastAPI Documentation: api/index.md
+
+  - Infrastructure:
+      - Overview: infrastructure/index.md
+      - AWS Infrastructure:
+          - infrastructure/aws/README.md
+          - Setup Guide: infrastructure/aws/setup-guide.md
+          - Operations Runbook: infrastructure/aws/operations-runbook.md
+          - ACM Certificate Setup: infrastructure/aws/acm-certificate-setup.md
+          - Testing Checklist: infrastructure/aws/testing-checklist.md
+          - Migration Guide: infrastructure/aws/migration-guide.md
+      - Terraform:
+          - Overview: infrastructure/terraform/index.md
 
   - Technical Reference:
       - reference/index.md

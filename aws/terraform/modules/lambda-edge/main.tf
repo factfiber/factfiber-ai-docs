@@ -64,35 +64,36 @@ resource "aws_iam_role_policy" "lambda_edge_logs" {
   })
 }
 
-# Package Lambda function code
-data "archive_file" "lambda_auth" {
-  type        = "zip"
-  source_file = var.lambda_source_file
-  output_path = "${path.module}/lambda-auth.zip"
+# Generate Lambda function package with embedded configuration
+module "lambda_config" {
+  source = "../lambda-edge-config"
+
+  github_client_id     = var.github_client_id
+  github_client_secret = var.github_client_secret
+  github_org          = var.github_org
+  allowed_teams       = var.allowed_teams
+  public_paths        = var.public_paths
+  jwt_secret          = var.jwt_secret
+  cookie_domain       = var.cookie_domain
+  environment         = var.environment
+  lambda_source_file  = var.lambda_source_file
 }
 
 # Lambda@Edge function
 resource "aws_lambda_function" "auth" {
   provider         = aws.us_east_1
-  filename         = data.archive_file.lambda_auth.output_path
+  filename         = module.lambda_config.lambda_package_path
   function_name    = "${var.project_name}-${var.environment}-docs-auth"
   role            = aws_iam_role.lambda_edge.arn
   handler         = "index.handler"
-  source_code_hash = data.archive_file.lambda_auth.output_base64sha256
+  source_code_hash = module.lambda_config.lambda_package_hash
   runtime         = "nodejs20.x"
   timeout         = 5
   memory_size     = 128
   publish         = true # Required for Lambda@Edge
 
-  environment {
-    variables = {
-      GITHUB_CLIENT_ID     = var.github_client_id
-      GITHUB_CLIENT_SECRET = var.github_client_secret
-      GITHUB_ORG          = var.github_org
-      ALLOWED_TEAMS       = join(",", var.allowed_teams)
-      PUBLIC_PATHS        = join(",", var.public_paths)
-    }
-  }
+  # Note: Lambda@Edge functions cannot have environment variables
+  # Configuration is embedded in the function package via the config module
 
   tags = var.tags
 }

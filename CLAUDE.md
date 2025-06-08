@@ -166,6 +166,22 @@ when poetry.lock/pyproject.toml exists:
 - Test: `poetry run pytest tests/ -v`
 - Single test: `poetry run pytest tests/path/to/test_file.py::test_function -v`
 
+## Documentation Generation Commands
+
+**API Documentation with pdoc:**
+
+- **CRITICAL**: Always use `--docformat google` flag (our standard)
+- **RECOMMENDED**: Include `--math --mermaid --include-undocumented` for complete coverage
+- Generate API docs: `poetry run docs-code` (uses enhanced configuration)
+- Direct command:
+  `poetry run pdoc --docformat google --math --mermaid --include-undocumented --html --output-dir docs/reference/code src/ff_docs`
+- Serve API docs: `poetry run pdoc --docformat google --math --mermaid --http localhost:8080 src/ff_docs`
+
+**Pre-commit Integration:**
+
+- Run mkdocs-incremental: `poetry run mkdocs-incremental`
+- Full pre-commit check: `poetry run pre-commit run --all-files`
+
 ## Linting and Formatting
 
 - **ALWAYS run pre-commit for full linting**: `poetry run pre-commit run --all-files`
