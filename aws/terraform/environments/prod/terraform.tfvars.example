@@ -30,5 +30,5 @@ aws_profile = "fc-aws-infra"
 
 # Route53 cross-account configuration
 # Run aws/scripts/setup-route53-cross-account.sh to create this role
-route53_cross_account_role_arn = "arn:aws:iam::ROUTE53_ACCOUNT_ID:role/FactFiberDocsRoute53CrossAccount"
+route53_cross_account_role_arn = "arn:aws:iam::397313464864:role/FactFiberDocsRoute53CrossAccount"
 route53_external_id            = "factfiber-docs-route53-access"
