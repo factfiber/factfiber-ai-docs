@@ -118,15 +118,20 @@ The system supports multiple patterns for aggregating documentation:
 
 ### Authentication
 
-- GitHub OAuth integration via OAuth2-Proxy
-- Team-based access control
-- Repository-level permissions
+- **Production**: GitHub OAuth with Lambda@Edge authentication at docs.factfiber.ai
+- **Development**: OAuth2-Proxy integration for local development
+- **Team-based access control**: factfiber-ai-dev, factfiber-ai-learn, factfiber.ai, ff-analytics, ff-operations
+- **Repository-level permissions**: Dynamic access validation
+- **Secure credential management**: AWS SSM Parameter Store
 
 ### Deployment
 
 - **Development**: DevSpace with hot-reloading ✅
-- **Production**:
-  - AWS: S3 + CloudFront with Lambda@Edge authentication
+- **Production**: AWS infrastructure with complete OAuth authentication ✅
+  - **Custom Domain**: <https://docs.factfiber.ai> with SSL/TLS certificate
+  - **Static Hosting**: S3 + CloudFront for global content delivery
+  - **Authentication**: Lambda@Edge GitHub OAuth with team validation
+  - **Security**: SSM Parameter Store for credential management
   - Kubernetes: With Helm charts (alternative deployment)
 - **CI/CD**: GitHub Actions workflows
 
@@ -137,10 +142,13 @@ The project includes Terraform configuration for AWS deployment:
 ### Components
 
 - **S3 Buckets**: Static site hosting with versioning
-- **CloudFront**: Global CDN with custom error pages
-- **Lambda@Edge**: GitHub OAuth authentication
+- **CloudFront**: Global CDN with custom domain (docs.factfiber.ai)
+- **ACM Certificate**: SSL/TLS certificate for HTTPS
+- **Lambda@Edge**: Complete GitHub OAuth authentication flow
+- **SSM Parameter Store**: Secure credential storage
 - **DynamoDB**: Terraform state locking
 - **CloudWatch**: Monitoring and alerts
+- **Route53**: DNS validation for ACM certificate
 
 ### Quick AWS Setup
 
