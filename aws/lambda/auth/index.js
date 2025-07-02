@@ -3,12 +3,15 @@
 const https = require('https');
 const querystring = require('querystring');
 
-// Environment variables
-const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
-const GITHUB_ORG = process.env.GITHUB_ORG;
-const ALLOWED_TEAMS = process.env.ALLOWED_TEAMS ? process.env.ALLOWED_TEAMS.split(',') : [];
-const PUBLIC_PATHS = process.env.PUBLIC_PATHS ? process.env.PUBLIC_PATHS.split(',') : ['/'];
+// Import embedded configuration (Lambda@Edge doesn't support environment variables)
+const CONFIG = require('./config.js');
+
+// Configuration from embedded config file
+const GITHUB_CLIENT_ID = CONFIG.GITHUB_CLIENT_ID;
+const GITHUB_CLIENT_SECRET = CONFIG.GITHUB_CLIENT_SECRET;
+const GITHUB_ORG = CONFIG.GITHUB_ORG;
+const ALLOWED_TEAMS = CONFIG.ALLOWED_TEAMS;
+const PUBLIC_PATHS = CONFIG.PUBLIC_PATHS;
 
 // Cache for GitHub API responses (5 minute TTL)
 const cache = new Map();
@@ -18,8 +21,15 @@ exports.handler = async (event) => {
     const request = event.Records[0].cf.request;
     const headers = request.headers;
     const uri = request.uri;
+    const querystring_params = request.querystring;
 
     console.log(`Processing request for: ${uri}`);
+
+    // Handle OAuth callback
+    if (uri === '/auth/callback') {
+        console.log('Processing OAuth callback');
+        return await handleOAuthCallback(querystring_params);
+    }
 
     // Check if path is public
     if (isPublicPath(uri)) {
@@ -31,7 +41,7 @@ exports.handler = async (event) => {
     const authToken = getAuthToken(headers);
     if (!authToken) {
         console.log('No auth token found');
-        return generateAuthResponse();
+        return generateAuthResponse(uri);
     }
 
     try {
@@ -42,7 +52,7 @@ exports.handler = async (event) => {
             return request;
         } else {
             console.log('Invalid authentication');
-            return generateAuthResponse();
+            return generateAuthResponse(uri);
         }
     } catch (error) {
         console.error('Authentication error:', error);
@@ -236,11 +246,12 @@ async function checkTeamMembershipForTeam(token, username, teamSlug) {
     });
 }
 
-function generateAuthResponse() {
+function generateAuthResponse(originalPath = '/') {
     const authUrl = `https://github.com/login/oauth/authorize?${querystring.stringify({
         client_id: GITHUB_CLIENT_ID,
         scope: 'read:org',
-        redirect_uri: 'https://docs.factfiber.ai/auth/callback'
+        redirect_uri: 'https://docs.factfiber.ai/auth/callback',
+        state: encodeURIComponent(originalPath)
     })}`;
 
     return {
@@ -250,6 +261,135 @@ function generateAuthResponse() {
             location: [{
                 key: 'Location',
                 value: authUrl
+            }],
+            'cache-control': [{
+                key: 'Cache-Control',
+                value: 'no-cache, no-store, must-revalidate'
+            }]
+        }
+    };
+}
+
+async function handleOAuthCallback(querystring_params) {
+    console.log('Processing OAuth callback with params:', querystring_params);
+
+    // Parse query parameters
+    const params = querystring.parse(querystring_params);
+    const code = params.code;
+    const state = params.state;
+
+    if (!code) {
+        console.error('No authorization code received');
+        return generateErrorResponse();
+    }
+
+    try {
+        // Exchange authorization code for access token
+        const tokenData = await exchangeCodeForToken(code);
+        if (!tokenData || !tokenData.access_token) {
+            console.error('Failed to exchange code for token');
+            return generateErrorResponse();
+        }
+
+        // Validate the token and get user info
+        const user = await getGitHubUser(tokenData.access_token);
+        if (!user) {
+            console.error('Failed to get user information');
+            return generateErrorResponse();
+        }
+
+        // Check team membership
+        const isMember = await checkTeamMembership(tokenData.access_token, user.login);
+        if (!isMember) {
+            console.log(`User ${user.login} is not a member of allowed teams`);
+            return generateAccessDeniedResponse();
+        }
+
+        // Create success response with authentication cookie
+        const redirectUrl = state ? decodeURIComponent(state) : '/';
+
+        return {
+            status: '302',
+            statusDescription: 'Found',
+            headers: {
+                location: [{
+                    key: 'Location',
+                    value: redirectUrl
+                }],
+                'set-cookie': [{
+                    key: 'Set-Cookie',
+                    value: `github_token=${tokenData.access_token}; Domain=.factfiber.ai; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=86400`
+                }],
+                'cache-control': [{
+                    key: 'Cache-Control',
+                    value: 'no-cache, no-store, must-revalidate'
+                }]
+            }
+        };
+
+    } catch (error) {
+        console.error('OAuth callback error:', error);
+        return generateErrorResponse();
+    }
+}
+
+async function exchangeCodeForToken(code) {
+    return new Promise((resolve) => {
+        const postData = querystring.stringify({
+            client_id: GITHUB_CLIENT_ID,
+            client_secret: GITHUB_CLIENT_SECRET,
+            code: code
+        });
+
+        const options = {
+            hostname: 'github.com',
+            path: '/login/oauth/access_token',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': Buffer.byteLength(postData),
+                'Accept': 'application/json',
+                'User-Agent': 'FactFiber-Docs-Lambda'
+            }
+        };
+
+        const req = https.request(options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => data += chunk);
+            res.on('end', () => {
+                if (res.statusCode === 200) {
+                    try {
+                        resolve(JSON.parse(data));
+                    } catch (e) {
+                        console.error('Failed to parse token response:', e);
+                        resolve(null);
+                    }
+                } else {
+                    console.error(`GitHub OAuth error: ${res.statusCode}`);
+                    resolve(null);
+                }
+            });
+        });
+
+        req.on('error', (e) => {
+            console.error('GitHub OAuth request error:', e);
+            resolve(null);
+        });
+
+        req.write(postData);
+        req.end();
+    });
+}
+
+function generateAccessDeniedResponse() {
+    return {
+        status: '403',
+        statusDescription: 'Forbidden',
+        body: 'Access denied. You must be a member of an authorized team to access this documentation.',
+        headers: {
+            'content-type': [{
+                key: 'Content-Type',
+                value: 'text/plain'
             }],
             'cache-control': [{
                 key: 'Cache-Control',

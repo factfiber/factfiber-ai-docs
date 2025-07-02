@@ -31,6 +31,35 @@ resource "aws_route53_record" "docs" {
   }
 }
 
+# ACM Certificate validation records
+resource "aws_route53_record" "cert_validation" {
+  provider = aws.route53
+  for_each = {
+    for dvo in var.acm_certificate_domain_validation : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.factfiber.zone_id
+}
+
+# ACM Certificate validation
+resource "aws_acm_certificate_validation" "docs" {
+  certificate_arn         = var.acm_certificate_arn
+  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
+
+  timeouts {
+    create = "5m"
+  }
+}
+
 # Optional: www.docs.factfiber.ai redirect
 resource "aws_route53_record" "docs_www" {
   provider = aws.route53

@@ -10,17 +10,9 @@ variable "aws_profile" {
   default     = "fc-aws-infra"
 }
 
-variable "github_client_id" {
-  description = "GitHub OAuth App client ID"
-  type        = string
-  sensitive   = true
-}
-
-variable "github_client_secret" {
-  description = "GitHub OAuth App client secret"
-  type        = string
-  sensitive   = true
-}
+# GitHub OAuth credentials are now stored in SSM Parameter Store:
+# - /factfiber/docs/github-client-id
+# - /factfiber/docs/github-client-secret
 
 variable "github_org" {
   description = "GitHub organization name"
@@ -37,7 +29,7 @@ variable "github_repo" {
 variable "allowed_teams" {
   description = "List of GitHub teams allowed to access documentation"
   type        = list(string)
-  default     = ["platform-team", "docs-team", "admin-team", "developers"]
+  default     = ["factfiber-ai-dev", "factfiber-ai-learn", "factfiber.ai", "ff-analytics", "ff-operations"]
 }
 
 variable "domain_aliases" {
@@ -68,12 +60,8 @@ variable "route53_external_id" {
   default     = "factfiber-docs-route53-access"
 }
 
-variable "jwt_secret" {
-  description = "Secret key for JWT token signing"
-  type        = string
-  sensitive   = true
-  default     = ""
-}
+# JWT secret is now stored in SSM Parameter Store:
+# - /factfiber/docs/jwt-secret
 
 variable "cookie_domain" {
   description = "Domain for authentication cookies"

@@ -1,0 +1,180 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:DeleteBucket",
+        "s3:GetBucket*",
+        "s3:ListBucket*",
+        "s3:PutBucket*",
+        "s3:DeleteBucket*",
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:GetObjectVersion",
+        "s3:PutObjectAcl",
+        "s3:GetBucketLocation",
+        "s3:ListAllMyBuckets"
+      ],
+      "Resource": [
+        "arn:aws:s3:::factfiber-*",
+        "arn:aws:s3:::factfiber-*/*",
+        "arn:aws:s3:::ff-crypto-tf-state",
+        "arn:aws:s3:::ff-crypto-tf-state/*"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cloudfront:CreateDistribution",
+        "cloudfront:GetDistribution",
+        "cloudfront:GetDistributionConfig",
+        "cloudfront:UpdateDistribution",
+        "cloudfront:DeleteDistribution",
+        "cloudfront:ListDistributions",
+        "cloudfront:CreateOriginAccessControl",
+        "cloudfront:GetOriginAccessControl",
+        "cloudfront:UpdateOriginAccessControl",
+        "cloudfront:DeleteOriginAccessControl",
+        "cloudfront:ListOriginAccessControls",
+        "cloudfront:CreateInvalidation",
+        "cloudfront:GetInvalidation",
+        "cloudfront:ListInvalidations",
+        "cloudfront:TagResource",
+        "cloudfront:UntagResource",
+        "cloudfront:ListTagsForResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "lambda:CreateFunction",
+        "lambda:GetFunction",
+        "lambda:GetFunctionConfiguration",
+        "lambda:UpdateFunctionCode",
+        "lambda:UpdateFunctionConfiguration",
+        "lambda:DeleteFunction",
+        "lambda:ListFunctions",
+        "lambda:TagResource",
+        "lambda:UntagResource",
+        "lambda:ListTags",
+        "lambda:PublishVersion",
+        "lambda:EnableReplication"
+      ],
+      "Resource": "arn:aws:lambda:*:*:function:factfiber-*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:GetRole",
+        "iam:UpdateRole",
+        "iam:DeleteRole",
+        "iam:AttachRolePolicy",
+        "iam:DetachRolePolicy",
+        "iam:PutRolePolicy",
+        "iam:GetRolePolicy",
+        "iam:DeleteRolePolicy",
+        "iam:ListRolePolicies",
+        "iam:ListAttachedRolePolicies",
+        "iam:PassRole",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:ListRoleTags",
+        "iam:CreateOpenIDConnectProvider",
+        "iam:GetOpenIDConnectProvider",
+        "iam:UpdateOpenIDConnectProviderThumbprint",
+        "iam:DeleteOpenIDConnectProvider",
+        "iam:TagOpenIDConnectProvider",
+        "iam:UntagOpenIDConnectProvider",
+        "iam:CreateServiceLinkedRole"
+      ],
+      "Resource": [
+        "arn:aws:iam::*:role/factfiber-*",
+        "arn:aws:iam::*:role/aws-service-role/*",
+        "arn:aws:iam::*:oidc-provider/token.actions.githubusercontent.com"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sns:CreateTopic",
+        "sns:GetTopicAttributes",
+        "sns:SetTopicAttributes",
+        "sns:DeleteTopic",
+        "sns:Subscribe",
+        "sns:Unsubscribe",
+        "sns:ListSubscriptionsByTopic",
+        "sns:TagResource",
+        "sns:UntagResource",
+        "sns:ListTagsForResource"
+      ],
+      "Resource": "arn:aws:sns:*:*:factfiber-*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:PutMetricAlarm",
+        "cloudwatch:DeleteAlarms",
+        "cloudwatch:DescribeAlarms",
+        "cloudwatch:TagResource",
+        "cloudwatch:UntagResource"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:DescribeLogGroups",
+        "logs:DeleteLogGroup",
+        "logs:TagLogGroup",
+        "logs:UntagLogGroup"
+      ],
+      "Resource": "arn:aws:logs:*:*:log-group:/aws/lambda/*factfiber*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:DeleteItem"
+      ],
+      "Resource": "arn:aws:dynamodb:*:*:table/ff-crypto-tf-state-lock"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sts:GetCallerIdentity"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath"
+      ],
+      "Resource": "arn:aws:ssm:*:*:parameter/factfiber/docs/*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "acm:RequestCertificate",
+        "acm:DescribeCertificate",
+        "acm:ListCertificates",
+        "acm:GetCertificate",
+        "acm:DeleteCertificate",
+        "acm:AddTagsToCertificate",
+        "acm:RemoveTagsFromCertificate",
+        "acm:ListTagsForCertificate"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

@@ -63,6 +63,21 @@ module "s3" {
   tags                       = local.common_tags
 }
 
+# Data sources for SSM parameters
+data "aws_ssm_parameter" "github_client_id" {
+  name = "/factfiber/docs/github-client-id"
+}
+
+data "aws_ssm_parameter" "github_client_secret" {
+  name            = "/factfiber/docs/github-client-secret"
+  with_decryption = true
+}
+
+data "aws_ssm_parameter" "jwt_secret" {
+  name            = "/factfiber/docs/jwt-secret"
+  with_decryption = true
+}
+
 # Lambda@Edge for authentication
 module "lambda_edge" {
   source = "../../modules/lambda-edge"
@@ -73,11 +88,12 @@ module "lambda_edge" {
 
   environment          = local.environment
   lambda_source_file   = "${path.root}/../../../lambda/auth/index.js"
-  github_client_id     = var.github_client_id
-  github_client_secret = var.github_client_secret
+  github_client_id     = data.aws_ssm_parameter.github_client_id.value
+  github_client_secret = data.aws_ssm_parameter.github_client_secret.value
   github_org          = var.github_org
   allowed_teams       = var.allowed_teams
-  jwt_secret          = var.jwt_secret
+  public_paths        = []  # Require authentication for all paths
+  jwt_secret          = data.aws_ssm_parameter.jwt_secret.value
   cookie_domain       = var.cookie_domain
   alarm_sns_topic_arn = aws_sns_topic.alerts.arn
   tags                = local.common_tags
@@ -91,16 +107,31 @@ module "cloudfront" {
   s3_bucket_id                  = module.s3.docs_bucket_id
   s3_bucket_regional_domain_name = module.s3.docs_bucket_regional_domain_name
   logs_bucket_domain_name        = module.s3.logs_bucket_domain_name
-  domain_aliases                 = var.domain_aliases
-  acm_certificate_arn           = var.acm_certificate_arn
-  lambda_edge_enabled           = false
-  lambda_edge_arn               = ""
+  domain_aliases                 = ["docs.factfiber.ai"]
+  acm_certificate_arn           = aws_acm_certificate.docs.arn
+  lambda_edge_enabled           = true
+  lambda_edge_arn               = module.lambda_edge.lambda_arn
   alarm_sns_topic_arn           = aws_sns_topic.alerts.arn
   tags                          = local.common_tags
 }
 
+# ACM Certificate for HTTPS (must be in us-east-1 for CloudFront)
+resource "aws_acm_certificate" "docs" {
+  provider                  = aws.us_east_1
+  domain_name               = "docs.factfiber.ai"
+  validation_method         = "DNS"
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "docs.factfiber.ai"
+  })
+}
+
 # Route53 DNS configuration (cross-account)
-# Temporarily disabled - will add DNS record manually after infrastructure is deployed
+# Temporarily commented out due to permission issues - will handle manually
 # module "route53" {
 #   source = "../../modules/route53"
 #
@@ -109,6 +140,12 @@ module "cloudfront" {
 #   cross_account_role_arn    = var.route53_cross_account_role_arn
 #   external_id               = var.route53_external_id
 #   create_www_redirect       = false
+#
+#   # ACM certificate validation
+#   acm_certificate_arn               = aws_acm_certificate.docs.arn
+#   acm_certificate_domain_validation = aws_acm_certificate.docs.domain_validation_options
+#
+#   tags = local.common_tags
 # }
 
 # SNS topic for alerts

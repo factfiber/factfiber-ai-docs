@@ -7,3 +7,8 @@ output "zone_id" {
   description = "Route53 zone ID"
   value       = data.aws_route53_zone.factfiber.zone_id
 }
+
+output "validated_certificate_arn" {
+  description = "ARN of the validated ACM certificate"
+  value       = aws_acm_certificate_validation.docs.certificate_arn
+}

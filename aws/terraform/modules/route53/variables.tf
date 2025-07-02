@@ -24,3 +24,19 @@ variable "create_www_redirect" {
   type        = bool
   default     = false
 }
+
+variable "acm_certificate_arn" {
+  description = "ARN of the ACM certificate to validate"
+  type        = string
+}
+
+variable "acm_certificate_domain_validation" {
+  description = "Domain validation options from ACM certificate"
+  type        = any
+}
+
+variable "tags" {
+  description = "Tags to apply to all resources"
+  type        = map(string)
+  default     = {}
+}
