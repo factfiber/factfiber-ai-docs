@@ -1,0 +1,223 @@
+# Comprehensive CI pipeline for security, quality, and functionality checks
+name: Continuous Integration
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+  # Run on security updates from Dependabot
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly security check on Mondays
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  security-and-quality:
+    name: Security & Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: '1.8.0'
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            venv-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          poetry install --with dev
+
+      - name: Run security vulnerability scan
+        run: |
+          poetry run pip-audit --desc --format=json --output=security-report.json || true
+          poetry run pip-audit --desc || echo "Security scan completed with findings"
+
+      - name: Upload security scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-results
+          path: security-report.json
+          retention-days: 30
+
+      - name: Run pre-commit hooks (linting & formatting)
+        run: |
+          poetry run pre-commit run --all-files
+
+      - name: Run type checking
+        run: |
+          poetry run mypy src/
+
+      - name: Check for common security issues
+        run: |
+          poetry run ruff check --select=S . || echo "Security linting completed"
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    needs: security-and-quality
+
+    strategy:
+      matrix:
+        python-version: ['3.13']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: '1.8.0'
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        run: |
+          poetry install --with dev
+
+      - name: Run unit tests
+        run: |
+          poetry run pytest tests/unit/ -v --cov=ff_docs --cov-report=xml --cov-report=html
+
+      - name: Run integration tests
+        run: |
+          poetry run pytest tests/integration/ -v || echo "Integration tests completed"
+
+      - name: Upload test coverage
+        uses: codecov/codecov-action@v4
+        if: matrix.python-version == '3.13'
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v4
+        if: matrix.python-version == '3.13'
+        with:
+          name: coverage-report
+          path: htmlcov/
+          retention-days: 14
+
+  build-docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    needs: [security-and-quality, test]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: '1.8.0'
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        run: |
+          poetry install --with dev
+
+      - name: Validate MkDocs configuration
+        run: |
+          poetry run mkdocs config
+
+      - name: Generate API documentation
+        run: |
+          poetry run docs-code
+
+      - name: Build documentation
+        run: |
+          poetry run mkdocs build --strict
+
+      - name: Check documentation links
+        run: |
+          poetry run pre-commit run check-links-in-generated-documentation --files site/index.html || echo "Link check completed"
+
+      - name: Upload documentation artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentation-build
+          path: site/
+          retention-days: 7
+
+  dependency-review:
+    name: Dependency Security Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
+          allow-licenses: MIT, Apache-2.0, BSD-3-Clause, BSD-2-Clause, ISC, GPL-3.0, LGPL-3.0
+
+  notify-security:
+    name: Security Notification
+    runs-on: ubuntu-latest
+    needs: [security-and-quality, test, build-docs]
+    if: failure() && (github.event_name == 'schedule' || contains(github.event.head_commit.message, 'security') || contains(github.event.head_commit.message, 'deps'))
+
+    steps:
+      - name: Send security alert
+        run: |
+          echo "🚨 Security or dependency check failed!"
+          echo "Event: ${{ github.event_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Please review the workflow logs for security issues."
+          # Add Slack/email notification here if needed

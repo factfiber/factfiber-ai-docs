@@ -87,6 +87,7 @@ types-aiofiles = "^24.1.0.20250516"
 ipython = "^9.3.0"
 jupyterlab = "^4.0.0"
 ingolstadt = {git = "https://github.com/factfiber/ingolstadt.git"}
+pip-audit = "^2.9.0"
 
 [tool.poetry.group.deploy.dependencies]
 # Kubernetes deployment

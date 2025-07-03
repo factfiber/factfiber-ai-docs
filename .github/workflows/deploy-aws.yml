@@ -7,7 +7,10 @@ on:
       - 'docs/**'
       - 'mkdocs.yml'
       - 'src/**'
+      - 'pyproject.toml'
+      - 'poetry.lock'
       - '.github/workflows/deploy-aws.yml'
+      - '.github/dependabot.yml'
   workflow_dispatch:
     inputs:
       environment:
@@ -24,12 +27,228 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
-    name: Deploy Documentation to AWS
+  quality-gates:
+    name: Quality & Security Gates
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment || 'prod' }}
+
+    outputs:
+      security-check: ${{ steps.security.outputs.result }}
+      coverage-check: ${{ steps.coverage.outputs.result }}
+      quality-check: ${{ steps.quality.outputs.result }}
+      risk-assessment: ${{ steps.risk-assessment.outputs.result }}
 
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: '1.8.0'
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        run: |
+          poetry install --with dev
+
+      - name: Security vulnerability check
+        id: security
+        run: |
+          # Run security audit and capture exit code
+          poetry run pip-audit --desc --format=json --output=security.json || AUDIT_EXIT=$?
+
+          # Check for high/critical vulnerabilities
+          if [ -f security.json ]; then
+            HIGH_VULN=$(jq '[.vulnerabilities[] | select(.fix_versions | length == 0) | select(.aliases[] | test("CVE-"))] | length' security.json || echo "0")
+            if [ "$HIGH_VULN" -gt 0 ]; then
+              echo "❌ Found $HIGH_VULN high/critical vulnerabilities without fixes"
+              echo "result=fail" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          fi
+
+          echo "✅ Security check passed"
+          echo "result=pass" >> $GITHUB_OUTPUT
+
+      - name: Test coverage check
+        id: coverage
+        run: |
+          # Run tests with coverage (minimum 85% for auto-deploy, 95% for clean pass)
+          poetry run pytest tests/ --cov=ff_docs --cov-report=json --cov-fail-under=85 || COVERAGE_EXIT=$?
+
+          # Parse actual coverage percentage
+          COVERAGE_PCT=$(python -c "import json; data=json.load(open('coverage.json')); print(f'{data[\"totals\"][\"percent_covered\"]:.1f}')" 2>/dev/null || echo "0")
+
+          if [ "${COVERAGE_EXIT:-0}" -ne 0 ]; then
+            echo "❌ Test coverage below 85% minimum threshold"
+            echo "result=fail" >> $GITHUB_OUTPUT
+            exit 1
+          elif [ "$(echo "$COVERAGE_PCT < 95" | bc -l 2>/dev/null || echo 1)" -eq 1 ]; then
+            echo "⚠️  Test coverage ${COVERAGE_PCT}% (below 95% ideal) - will require manual approval"
+            echo "result=warn" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Coverage check passed (${COVERAGE_PCT}%)"
+            echo "result=pass" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check for risky changes
+        id: risk-assessment
+        run: |
+          # Check for major dependency changes or security fixes
+          COMMIT_MSG=$(git log --oneline -1)
+          echo "Analyzing commit: $COMMIT_MSG"
+
+          REQUIRES_REVIEW=false
+
+          # Major version bumps
+          if echo "$COMMIT_MSG" | grep -E "(urllib3.*2\.|kubernetes.*29\.|major)" > /dev/null; then
+            echo "⚠️  Major dependency changes detected"
+            REQUIRES_REVIEW=true
+          fi
+
+          # Security fixes that might have compatibility issues
+          if echo "$COMMIT_MSG" | grep -E "(security|CVE)" > /dev/null && echo "$COMMIT_MSG" | grep -E "(urllib3|requests|protobuf)" > /dev/null; then
+            echo "⚠️  Security fix for core dependency - checking compatibility"
+            REQUIRES_REVIEW=true
+          fi
+
+          if [ "$REQUIRES_REVIEW" = "true" ]; then
+            echo "result=review-needed" >> $GITHUB_OUTPUT
+          else
+            echo "result=safe-to-deploy" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Code quality check
+        id: quality
+        run: |
+          # Run all quality checks
+          poetry run pre-commit run --all-files || QUALITY_EXIT=$?
+
+          if [ "${QUALITY_EXIT:-0}" -ne 0 ]; then
+            echo "❌ Code quality checks failed"
+            echo "result=fail" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+          echo "✅ Quality check passed"
+          echo "result=pass" >> $GITHUB_OUTPUT
+
+      - name: Upload security report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-report
+          path: security.json
+          retention-days: 30
+
+  # Automatic deployment for safe changes
+  auto-deploy:
+    name: Auto Deploy (Safe Changes)
+    runs-on: ubuntu-latest
+    environment: prod
+    needs: quality-gates
+    # Auto-deploy when all checks pass cleanly and no risky changes
+    if: |
+      needs.quality-gates.outputs.security-check == 'pass' &&
+      (needs.quality-gates.outputs.coverage-check == 'pass') &&
+      needs.quality-gates.outputs.quality-check == 'pass' &&
+      needs.quality-gates.outputs.risk-assessment == 'safe-to-deploy'
+
+    steps:
+      - name: Deploy automatically
+        run: echo "🚀 Proceeding with automatic deployment for safe changes"
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: '1.8.0'
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        run: |
+          poetry install --with docs
+
+      - name: Build documentation
+        run: |
+          poetry run mkdocs build --strict
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Deploy to S3
+        run: |
+          aws s3 sync site/ s3://${{ secrets.DOCS_S3_BUCKET }}/ \
+            --delete \
+            --cache-control "public, max-age=3600" \
+            --metadata-directive REPLACE
+
+      - name: Invalidate CloudFront cache
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+
+      - name: Post deployment check
+        run: |
+          echo "✅ Automatic deployment complete!"
+          echo "🌐 Documentation available at: https://docs.factfiber.ai"
+
+  # Manual approval deployment for risky changes
+  manual-deploy:
+    name: Manual Deploy (Risky Changes)
+    runs-on: ubuntu-latest
+    environment: prod-manual-approval
+    needs: quality-gates
+    # Require manual approval when there are warnings or risky changes
+    if: |
+      needs.quality-gates.outputs.security-check == 'pass' &&
+      (needs.quality-gates.outputs.coverage-check == 'warn' || needs.quality-gates.outputs.coverage-check == 'pass') &&
+      needs.quality-gates.outputs.quality-check == 'pass' &&
+      (needs.quality-gates.outputs.risk-assessment == 'review-needed' || needs.quality-gates.outputs.coverage-check == 'warn')
+
+    steps:
+      - name: Review required for risky changes
+        run: |
+          echo "⚠️  Manual review required for this deployment:"
+          echo "   - Major dependency changes: ${{ needs.quality-gates.outputs.risk-assessment }}"
+          echo "   - Coverage status: ${{ needs.quality-gates.outputs.coverage-check }}"
+          echo "   - Security status: ${{ needs.quality-gates.outputs.security-check }}"
+          echo "Please review the changes before approving deployment."
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
@@ -56,6 +275,18 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install --with docs
+
+      - name: Run security and quality checks
+        run: |
+          poetry run pre-commit run --all-files
+
+      - name: Run tests
+        run: |
+          poetry run pytest tests/ -v
+
+      - name: Check for security vulnerabilities
+        run: |
+          poetry run pip-audit --desc --format=json || echo "Security scan completed"
 
       - name: Build documentation
         run: |

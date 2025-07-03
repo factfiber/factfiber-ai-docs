@@ -1,0 +1,119 @@
+# Staging deployment - automatically deploys on develop branch with basic quality gates
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'src/**'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+      - '.github/workflows/deploy-staging.yml'
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  basic-quality-gates:
+    name: Basic Quality Gates (Staging)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: '1.8.0'
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        run: |
+          poetry install --with dev
+
+      - name: Run tests (basic)
+        run: |
+          poetry run pytest tests/ -v --cov=ff_docs --cov-fail-under=60
+
+      - name: Security scan (non-blocking)
+        run: |
+          poetry run pip-audit --desc || echo "Security scan completed with findings - staging deployment continues"
+
+      - name: Code quality (basic)
+        run: |
+          poetry run ruff check src/ tests/
+          poetry run ruff format --check src/ tests/
+
+  deploy-staging:
+    name: Deploy to Staging Environment
+    runs-on: ubuntu-latest
+    environment: staging
+    needs: basic-quality-gates
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: '1.8.0'
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: |
+          poetry install --with docs
+
+      - name: Build documentation
+        run: |
+          poetry run mkdocs build --strict
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_STAGING_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - name: Deploy to staging S3
+        run: |
+          aws s3 sync site/ s3://${{ secrets.STAGING_S3_BUCKET }}/ \
+            --delete \
+            --cache-control "public, max-age=300" \
+            --metadata-directive REPLACE
+
+      - name: Invalidate staging CloudFront
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.STAGING_CLOUDFRONT_DISTRIBUTION_ID }} \
+            --paths "/*"
+
+      - name: Post deployment verification
+        run: |
+          echo "✅ Staging deployment complete!"
+          echo "🌐 Staging URL: https://${{ secrets.STAGING_DOMAIN }}"
+          echo "📊 Lower quality gates applied for faster iteration"
