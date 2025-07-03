@@ -1,0 +1,79 @@
+# Dependabot configuration for factfiber-ai-docs
+# Automatically check for security updates and dependency updates
+
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    # Security updates are automatically created regardless of schedule
+    open-pull-requests-limit: 10
+    assignees:
+      - "shauncutts"
+    reviewers:
+      - "shauncutts"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    # Group all patch-level updates together
+    groups:
+      patch-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+      minor-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+    # Allow both dependency and security updates
+    allow:
+      - dependency-type: "all"
+    # Labels for easy identification
+    labels:
+      - "dependencies"
+      - "security"
+
+  # GitHub Actions dependencies
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 5
+    assignees:
+      - "shauncutts"
+    reviewers:
+      - "shauncutts"
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "github-actions"
+      - "dependencies"
+
+  # Docker dependencies (if using Dockerfile)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 5
+    assignees:
+      - "shauncutts"
+    reviewers:
+      - "shauncutts"
+    commit-message:
+      prefix: "docker"
+    labels:
+      - "docker"
+      - "dependencies"

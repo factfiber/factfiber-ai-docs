@@ -17,10 +17,12 @@ packages = [{include = "ff_docs", from = "src"}]
 [tool.poetry.scripts]
 ff-docs = "ff_docs.cli:main"
 ff-docs-server = "ff_docs.server:run_server"
-docs-code = "bash -c 'pdoc -o docs/reference/code --math --mermaid --docformat google --include-undocumented src/ff_docs'"
+
+[tool.poetry.plugins.exec]
+docs-code = "pdoc -o docs/reference/code --math --mermaid --docformat google --include-undocumented src/ff_docs"
 docs-serve = "mkdocs serve --dev-addr 0.0.0.0:8000"
 docs-build = "mkdocs build"
-docs-clean = "bash -c 'rm -rf docs/reference/code/* site/*'"
+docs-clean = "rm -rf docs/reference/code/* site/*"
 
 [tool.poetry.dependencies]
 python = ">=3.13,<3.14"
@@ -62,6 +64,7 @@ rich = "^13.0.0"
 aiofiles = "^24.1.0"
 # API documentation generation
 pdoc = "^14.0.0"
+urllib3 = "^2.5.0"
 
 [tool.poetry.group.dev.dependencies]
 # Testing
@@ -87,7 +90,7 @@ ingolstadt = {git = "https://github.com/factfiber/ingolstadt.git"}
 
 [tool.poetry.group.deploy.dependencies]
 # Kubernetes deployment
-kubernetes = "^28.1.0"
+kubernetes = "^29.0.0"
 # Docker utilities
 docker = "^6.1.0"
 # Cloud providers
