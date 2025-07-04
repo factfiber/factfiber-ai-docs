@@ -13,7 +13,7 @@ data:
   LOG_LEVEL: "INFO"
 
   # Server configuration
-  SERVER_HOST: "0.0.0.0"
+  SERVER_HOST: "0.0.0.0"  # Required for container networking
   SERVER_PORT: "8000"
   SERVER_RELOAD: "true"
 

@@ -1,28 +1,28 @@
 [build-system]
-requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core"]
 
 [tool.poetry]
-name = "ff-docs"
-version = "0.1.0"
-description = "FactFiber.ai centralized multi-repository documentation system"
 authors = ["Shaun Cutts <shauncutts@factfiber.com>"]
-readme = "README.md"
-license = "Proprietary"
-homepage = "https://factfiber.ai"
-repository = "https://github.com/factfiber/factfiber-ai-docs"
+description = "FactFiber.ai centralized multi-repository documentation system"
 documentation = "https://docs.factfiber.ai"
+homepage = "https://factfiber.ai"
+license = "Proprietary"
+name = "ff-docs"
 packages = [{include = "ff_docs", from = "src"}]
+readme = "README.md"
+repository = "https://github.com/factfiber/factfiber-ai-docs"
+version = "0.1.0"
 
 [tool.poetry.scripts]
 ff-docs = "ff_docs.cli:main"
 ff-docs-server = "ff_docs.server:run_server"
 
 [tool.poetry.plugins.exec]
-docs-code = "pdoc -o docs/reference/code --math --mermaid --docformat google --include-undocumented src/ff_docs"
-docs-serve = "mkdocs serve --dev-addr 0.0.0.0:8000"
 docs-build = "mkdocs build"
 docs-clean = "rm -rf docs/reference/code/* site/*"
+docs-code = "pdoc -o docs/reference/code --math --mermaid --docformat google --include-undocumented src/ff_docs"
+docs-serve = "mkdocs serve --dev-addr 0.0.0.0:8000"
 
 [tool.poetry.dependencies]
 python = ">=3.13,<3.14"
@@ -34,59 +34,59 @@ mkdocs-multirepo-plugin = "^0.8.3"
 # Documentation enhancement plugins
 mkdocs-awesome-pages-plugin = "^2.9.0"
 mkdocs-git-revision-date-localized-plugin = "^1.2.0"
+mkdocs-jupyter = "^0.24.0"
+mkdocs-mermaid2-plugin = "^1.1.0"
 mkdocs-minify-plugin = "^0.8.0"
 mkdocstrings = {extras = ["python"], version = "^0.25.0"}
-mkdocs-mermaid2-plugin = "^1.1.0"
-mkdocs-jupyter = "^0.24.0"
 # Mathematical notation support
 pymdown-extensions = "^10.0"
 # FastAPI for documentation server
 fastapi = "^0.115.0"
-uvicorn = {extras = ["standard"], version = "^0.31.0"}
 pydantic = "^2.0.0"
 pydantic-settings = "^2.0.0"
+uvicorn = {extras = ["standard"], version = "^0.31.0"}
 # GitHub integration
-PyGithub = "^1.59.0"
-requests = "^2.32.4"
-httpx = "^0.25.0"
 GitPython = "^3.1.40"
+PyGithub = "^1.59.0"
+httpx = "^0.25.0"
+requests = "^2.32.4"
 # YAML processing
 PyYAML = "^6.0"
 "ruamel.yaml" = "^0.18.0"
 # Authentication and security
-pyjwt = {extras = ["cryptography"], version = "^2.8.0"}
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+pyjwt = {extras = ["cryptography"], version = "^2.8.0"}
 # Monitoring and observability
 prometheus-client = "^0.19.0"
 # Development utilities
+aiofiles = "^24.1.0"
 click = "^8.1.0"
 rich = "^13.0.0"
-aiofiles = "^24.1.0"
 # API documentation generation
 pdoc = "^14.0.0"
 urllib3 = "^2.5.0"
 
 [tool.poetry.group.dev.dependencies]
 # Testing
+httpx = "^0.25.0"
 pytest = "^7.4.0"
 pytest-asyncio = "^0.21.0"
 pytest-cov = "^4.1.0"
 pytest-mock = "^3.11.0"
-httpx = "^0.25.0"
 # Code quality
+black = "^24.0.0"
+mypy = "^1.6.0"
 pre-commit = "^3.4.0"
 ruff = "^0.8.0"
-mypy = "^1.6.0"
-black = "^24.0.0"
 # Type stubs
 types-PyYAML = "^6.0.0"
-types-requests = "^2.31.0"
-types-click = "^7.1.8"
 types-aiofiles = "^24.1.0.20250516"
+types-click = "^7.1.8"
+types-requests = "^2.31.0"
 # Development tools
+ingolstadt = {git = "https://github.com/factfiber/ingolstadt.git"}
 ipython = "^9.3.0"
 jupyterlab = "^4.0.0"
-ingolstadt = {git = "https://github.com/factfiber/ingolstadt.git"}
 pip-audit = "^2.9.0"
 
 [tool.poetry.group.deploy.dependencies]
@@ -100,8 +100,8 @@ google-cloud-storage = "^2.10.0"
 
 [tool.poetry.group.monitoring.dependencies]
 # Advanced monitoring
-grafana-api = "^1.0.3"
 elasticsearch = "^8.10.0"
+grafana-api = "^1.0.3"
 redis = "^5.0.0"
 
 # Ruff configuration
@@ -140,9 +140,8 @@ line-length = 80
 target-version = "py313"
 
 [tool.ruff.lint]
-fixable = ["ALL"]
-unfixable = []
 allowed-confusables = ["l"]
+fixable = ["ALL"]
 ignore = [
   "D100", # Missing docstring in public module
   "D104", # Missing docstring in public package
@@ -164,6 +163,7 @@ ignore = [
   "PD011", # Pandas use of dot values
 ]
 select = ["ALL"]
+unfixable = []
 
 [tool.ruff.lint.per-file-ignores]
 "{tests/**/*.py,src/ff_docs/testutil/**/*.py}" = [
@@ -190,9 +190,6 @@ convention = "google"
 
 # Black configuration
 [tool.black]
-line-length = 80
-target-version = ['py313']
-include = '\.pyi?$'
 extend-exclude = '''
 /(
   # directories
@@ -206,6 +203,9 @@ extend-exclude = '''
   | dist
 )/
 '''
+include = '\.pyi?$'
+line-length = 80
+target-version = ['py313']
 
 # MyPy configuration
 [tool.mypy]
@@ -215,69 +215,69 @@ ignore_missing_imports = true
 python_version = "3.13"
 
 [[tool.mypy.overrides]]
-module = [
-    "mkdocs.*",
-    "mkdocs_material.*",
-    "mkdocs_multirepo_plugin.*",
-    "pymdownx.*",
-    "github.*",
-    "kubernetes.*",
-    "docker.*",
-]
 ignore_missing_imports = true
+module = [
+  "mkdocs.*",
+  "mkdocs_material.*",
+  "mkdocs_multirepo_plugin.*",
+  "pymdownx.*",
+  "github.*",
+  "kubernetes.*",
+  "docker.*",
+]
 
 # Pytest configuration
 [tool.pytest.ini_options]
-minversion = "7.0"
 addopts = [
-    "--strict-config",
-    "--strict-markers",
-    "--disable-warnings",
-    "--cov=ff_docs",
-    "--cov-report=term-missing",
-    "--cov-report=html",
-    "--cov-report=xml",
+  "--strict-config",
+  "--strict-markers",
+  "--disable-warnings",
+  "--cov=ff_docs",
+  "--cov-report=term-missing",
+  "--cov-report=html",
+  "--cov-report=xml",
 ]
-testpaths = ["tests"]
-python_files = ["test_*.py", "*_test.py"]
-python_classes = ["Test*"]
-python_functions = ["test_*"]
 markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
-    "integration: marks tests as integration tests",
-    "unit: marks tests as unit tests",
-    "api: marks tests that require API access",
-    "auth: marks tests that require authentication",
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+  "integration: marks tests as integration tests",
+  "unit: marks tests as unit tests",
+  "api: marks tests that require API access",
+  "auth: marks tests that require authentication",
 ]
+minversion = "7.0"
+python_classes = ["Test*"]
+python_files = ["test_*.py", "*_test.py"]
+python_functions = ["test_*"]
+testpaths = ["tests"]
 
 # Coverage configuration
 [tool.coverage.run]
-source = ["src/ff_docs"]
 omit = [
-    "tests/*",
-    "*/migrations/*",
-    "*/venv/*",
-    "*/.venv/*",
+  "tests/*",
+  "*/migrations/*",
+  "*/venv/*",
+  "*/.venv/*",
 ]
+source = ["src/ff_docs"]
 
 [tool.coverage.report]
 exclude_lines = [
-    "pragma: no cover",
-    "def __repr__",
-    "if self.debug:",
-    "if settings.DEBUG",
-    "raise AssertionError",
-    "raise NotImplementedError",
-    "if 0:",
-    "if __name__ == .__main__.:",
-    "class .*\\bProtocol\\):",
-    "@(abc\\.)?abstractmethod",
+  "pragma: no cover",
+  "def __repr__",
+  "if self.debug:",
+  "if settings.DEBUG",
+  "raise AssertionError",
+  "raise NotImplementedError",
+  "if 0:",
+  "if __name__ == .__main__.:",
+  "class .*\\bProtocol\\):",
+  "@(abc\\.)?abstractmethod",
 ]
 
 # pdoc configuration
 [tool.pdoc]
-output_directory = "docs/reference/code"
 include_undocumented = true
-show_source = true
 math = true
 mermaid = true
+output_directory = "docs/reference/code"
+show_source = true

@@ -256,7 +256,7 @@ async def test_webhook_endpoint() -> dict[str, str]:
     }
 
 
-@router.get("/sync/status/{repo_name}")
+@router.get("/sync/status/{repo_name:path}")
 async def get_sync_status(repo_name: str) -> dict[str, Any]:
     """
     Get synchronization status for a specific repository.

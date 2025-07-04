@@ -7,6 +7,9 @@ This module handles transparent rewriting of relative links in markdown files
 to create seamless navigation across repositories in the unified documentation
 system. It preserves the original authoring experience while enabling
 cross-repository linking.
+
+Note: This module contains complex integration logic with file parsing
+and external dependencies, designed for integration testing.
 """
 
 import logging
@@ -216,17 +219,33 @@ class MarkdownLinkRewriter:
         # Handle current directory and parent directory references
         relative_path = relative_path.removeprefix("./")
 
-        # Resolve path relative to source directory
-        resolved = source_dir / relative_path
+        # If path starts with ../ resolve relative to source directory
+        # Otherwise resolve relative to docs root
+        if relative_path.startswith(("../", "..\\")):
+            resolved = source_dir / relative_path
+        else:
+            # Find docs root by going up from source_dir until we find 'docs'
+            docs_root = source_dir
+            while docs_root.name != "docs" and docs_root.parent != docs_root:
+                docs_root = docs_root.parent
 
-        # Normalize path (resolve .. references)
-        try:
-            resolved = resolved.resolve()
-        except (OSError, ValueError):
-            # If resolution fails, use simple normalization
-            resolved = Path(*[p for p in resolved.parts if p != "."])
+            # If we found docs directory, resolve relative to it
+            if docs_root.name == "docs":
+                resolved = docs_root / relative_path
+            else:
+                # Fallback to source directory resolution
+                resolved = source_dir / relative_path
 
-        return resolved
+        # Normalize path (resolve .. references) without absolute conversion
+        parts: list[str] = []
+        for part in resolved.parts:
+            if part == "..":
+                if parts:
+                    parts.pop()
+            elif part != ".":
+                parts.append(part)
+
+        return Path(*parts) if parts else Path()
 
     def _convert_to_unified_path(
         self, resolved_path: Path, rule: LinkRewriteRule

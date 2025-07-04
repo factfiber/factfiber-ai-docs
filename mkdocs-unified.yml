@@ -103,5 +103,5 @@ plugins:
     arguments:
       theme: default
 watch:
-- docs/
 - src/
+- docs/

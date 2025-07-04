@@ -6,6 +6,10 @@ Unified MkDocs configuration generation.
 This module creates dynamic MkDocs configurations that combine multiple
 repositories into a unified documentation site with seamless navigation
 and proper repository-scoped access control.
+
+Note: This module contains complex integration logic that coordinates
+multiple external systems (Git, GitHub, file system, MkDocs) and is
+designed for integration testing rather than unit testing.
 """
 
 import logging

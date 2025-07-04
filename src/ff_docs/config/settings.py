@@ -74,8 +74,8 @@ class ServerSettings(BaseSettings):
     """Server configuration settings."""
 
     host: str = Field(
-        default="0.0.0.0",  # noqa: S104
-        description="Server host",
+        default="127.0.0.1",
+        description="Server host (use 0.0.0.0 for all interfaces)",
     )
     port: int = Field(default=8000, description="Server port")
     workers: int = Field(default=1, description="Number of worker processes")

@@ -6,6 +6,9 @@ pdoc integration for automatic API documentation generation.
 This module handles automatic generation of API documentation from Python
 source code using pdoc, converting it to MkDocs-compatible format for
 integration with the unified documentation system.
+
+Note: This module contains complex integration logic with external
+processes and file systems, designed for integration testing.
 """
 
 import asyncio
@@ -14,6 +17,7 @@ from pathlib import Path
 from typing import Any
 
 import aiofiles
+import aiofiles.os
 import yaml
 from pydantic import BaseModel, Field
 
@@ -165,12 +169,8 @@ class PdocGenerator:
                         and item.name not in ["tests", "test", "__pycache__"]
                     ):
                         # Calculate relative path from repo root
-                        try:
-                            rel_path = item.relative_to(repo_dir)
-                            python_packages.append(str(rel_path))
-                        except ValueError:
-                            # Item is not under repo_dir
-                            pass
+                        rel_path = item.relative_to(repo_dir)
+                        python_packages.append(str(rel_path))
 
         return PdocConfig(
             enabled=bool(python_packages), packages=python_packages

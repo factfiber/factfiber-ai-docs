@@ -45,7 +45,7 @@ def create_app() -> FastAPI:
 app = create_app()
 
 
-def run_server() -> None:
+def run_server() -> None:  # pragma: no cover
     """Run the development server."""
     import uvicorn
 

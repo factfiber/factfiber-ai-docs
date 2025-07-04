@@ -87,21 +87,21 @@ jobs:
       - name: Test coverage check
         id: coverage
         run: |
-          # Run tests with coverage (minimum 85% for auto-deploy, 95% for clean pass)
-          poetry run pytest tests/ --cov=ff_docs --cov-report=json --cov-fail-under=85 || COVERAGE_EXIT=$?
+          # Run tests with coverage (minimum 98% for auto-deploy, 100% for clean pass)
+          poetry run pytest tests/ --cov=ff_docs --cov-report=json --cov-fail-under=98 || COVERAGE_EXIT=$?
 
           # Parse actual coverage percentage
           COVERAGE_PCT=$(python -c "import json; data=json.load(open('coverage.json')); print(f'{data[\"totals\"][\"percent_covered\"]:.1f}')" 2>/dev/null || echo "0")
 
           if [ "${COVERAGE_EXIT:-0}" -ne 0 ]; then
-            echo "❌ Test coverage below 85% minimum threshold"
+            echo "❌ Test coverage below 98% minimum threshold"
             echo "result=fail" >> $GITHUB_OUTPUT
             exit 1
-          elif [ "$(echo "$COVERAGE_PCT < 95" | bc -l 2>/dev/null || echo 1)" -eq 1 ]; then
-            echo "⚠️  Test coverage ${COVERAGE_PCT}% (below 95% ideal) - will require manual approval"
+          elif [ "$(echo "$COVERAGE_PCT < 100" | bc -l 2>/dev/null || echo 1)" -eq 1 ]; then
+            echo "⚠️  Test coverage ${COVERAGE_PCT}% (below 100% ideal) - will require manual approval"
             echo "result=warn" >> $GITHUB_OUTPUT
           else
-            echo "✅ Coverage check passed (${COVERAGE_PCT}%)"
+            echo "✅ Coverage check passed (${COVERAGE_PCT}%) - Perfect!"
             echo "result=pass" >> $GITHUB_OUTPUT
           fi
 

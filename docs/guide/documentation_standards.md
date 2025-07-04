@@ -491,10 +491,81 @@ To integrate with the central documentation portal:
 
 ### Link Rewriting
 
-The portal automatically rewrites relative links for unified navigation:
+The portal automatically rewrites relative links for unified navigation. Understanding how this works is crucial
+for creating links that work correctly in the unified documentation system.
 
-- **Local Links**: `[Setup Guide](../guide/setup.md)`
-- **Portal Links**: `/projects/your-repo/guide/setup/` (automatically converted)
+#### Link Resolution Rules
+
+The system uses different resolution strategies based on the link pattern:
+
+**1. Parent Directory Links (starting with `../`)**
+
+- **Pattern**: `[Link Text](../path/to/file.md)`
+- **Resolution**: Relative to the current file's directory
+- **Use Case**: Navigate to sibling or parent sections
+
+**2. Simple Relative Links (no `../` prefix)**
+
+- **Pattern**: `[Link Text](path/to/file.md)`
+- **Resolution**: Relative to the repository's `docs/` root directory
+- **Use Case**: Navigate within the same documentation hierarchy
+
+**3. Current Directory Links (starting with `./`)**
+
+- **Pattern**: `[Link Text](./file.md)`
+- **Resolution**: Same as simple relative (relative to docs root after removing `./`)
+- **Use Case**: Explicit current directory reference
+
+#### Link Transformation Examples
+
+From a file at `docs/guide/advanced/usage.md`:
+
+```markdown
+<!-- Parent directory links - resolved relative to current file -->
+[Architecture](../architecture.md)          → /projects/your-repo/guide/architecture/
+[Getting Started](../../getting-started.md) → /projects/your-repo/getting-started/
+[API Reference](../../../reference/api.md)  → /projects/your-repo/reference/api/
+
+<!-- Simple relative links - resolved relative to docs root -->
+[Reference](reference/index.md)             → /projects/your-repo/reference/index/
+[Guide Home](guide/index.md)                → /projects/your-repo/guide/index/
+
+<!-- Current directory links - resolved relative to docs root -->
+[Local File](./local.md)                    → /projects/your-repo/local/
+```
+
+#### File Extension Handling
+
+All markdown files are converted to directory-style URLs:
+
+- `file.md` → `/path/to/file/`
+- `document.rst` → `/path/to/document/`
+- No extension → `/path/to/document/`
+
+#### Complete Example
+
+**Local Links in Your Repository**:
+
+```markdown
+[Setup Guide](../guide/setup.md)
+[API Reference](reference/api/index.md)
+[Development Guide](guide/development.md)
+```
+
+**Automatically Converted Portal Links**:
+
+```
+/projects/your-repo/guide/setup/
+/projects/your-repo/reference/api/index/
+/projects/your-repo/guide/development/
+```
+
+#### Best Practices
+
+1. **Use `../` for navigation between sections**: When linking from one major section to another
+2. **Use simple paths for within-section links**: When staying within the same documentation area
+3. **Test locally**: Links should work in your local MkDocs build before portal integration
+4. **Avoid absolute paths**: Don't use `/docs/...` or full URLs for internal links
 
 ### Search Integration
 

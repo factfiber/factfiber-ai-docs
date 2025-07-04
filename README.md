@@ -95,7 +95,7 @@ Key environment variables:
 - `GITHUB_TOKEN`: GitHub personal access token
 - `GITHUB_ORG`: GitHub organization name
 - `AUTH_SECRET_KEY`: JWT secret key
-- `SERVER_HOST`: Server host (default: 0.0.0.0)
+- `SERVER_HOST`: Server host (default: 127.0.0.1, use 0.0.0.0 for Docker)
 - `SERVER_PORT`: Server port (default: 8000)
 
 ## Development Workflow

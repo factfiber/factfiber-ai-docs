@@ -107,8 +107,13 @@ docs-serve
 #### Production Mode
 
 ```bash
-# Start production server
+# Start production server (with custom host/port)
 ff-docs serve-api --host 0.0.0.0 --port 8000
+
+# Or use environment variables
+export SERVER_HOST=0.0.0.0
+export SERVER_PORT=8000
+ff-docs serve-api
 
 # Build static documentation
 docs-build
@@ -184,7 +189,7 @@ curl "http://localhost:8000/docs/search?q=context+graph"
 |----------|-------------|---------|
 | `GITHUB_TOKEN` | GitHub personal access token | Required |
 | `GITHUB_ORG` | GitHub organization name | `factfiber` |
-| `SERVER_HOST` | FastAPI server host | `0.0.0.0` |
+| `SERVER_HOST` | FastAPI server host | `127.0.0.1` |
 | `SERVER_PORT` | FastAPI server port | `8000` |
 | `AUTH_SECRET_KEY` | JWT secret key | Required for auth |
 | `ENVIRONMENT` | Deployment environment | `development` |

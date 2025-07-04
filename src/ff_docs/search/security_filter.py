@@ -158,7 +158,7 @@ class SecureSearchEngine:
                     await self.permission_checker.check_repository_access(
                         user_session.username,
                         repo_name,
-                        user_session.access_token,
+                        user_session.access_token or "",
                         "read",
                     )
                 )

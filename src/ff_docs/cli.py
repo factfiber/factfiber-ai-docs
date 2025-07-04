@@ -51,20 +51,32 @@ def serve(host: str, port: int, *, reload: bool) -> None:
 @main.command("serve-api")  # type: ignore[misc]
 @click.option(  # type: ignore[misc]
     "--host",
-    default="0.0.0.0",  # noqa: S104
-    help="Host to bind to",
+    default=None,
+    help="Host to bind to (defaults to SERVER_HOST env or 127.0.0.1)",
 )
-@click.option("--port", default=8001, help="Port to bind to")  # type: ignore[misc]
+@click.option(  # type: ignore[misc]
+    "--port",
+    default=None,
+    type=int,
+    help="Port to bind to (defaults to SERVER_PORT env or 8000)",
+)
 @click.option("--reload", is_flag=True, help="Enable auto-reload")  # type: ignore[misc]
-def serve_api(host: str, port: int, *, reload: bool) -> None:
+def serve_api(host: str | None, port: int | None, *, reload: bool) -> None:
     """Start the FastAPI documentation management server."""
     import uvicorn
 
-    console.print(f"🔥 Starting FastAPI server on {host}:{port}")
+    from ff_docs.config.settings import get_settings
+
+    settings = get_settings()
+    # Use CLI args, then env vars, then defaults
+    actual_host = host or settings.server.host
+    actual_port = port or settings.server.port
+
+    console.print(f"🔥 Starting FastAPI server on {actual_host}:{actual_port}")
     uvicorn.run(
         "ff_docs.server.main:app",
-        host=host,
-        port=port,
+        host=actual_host,
+        port=actual_port,
         reload=reload,
     )
 

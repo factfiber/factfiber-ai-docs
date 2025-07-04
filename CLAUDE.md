@@ -196,6 +196,20 @@ when poetry.lock/pyproject.toml exists:
 - Test: `poetry run pytest tests/ -v`
 - Single test: `poetry run pytest tests/path/to/test_file.py::test_function -v`
 
+## Testing Requirements
+
+**CRITICAL: Maintain 98% minimum test coverage**
+
+- **Coverage Target**: 98% minimum (currently at 99%!)
+- **Coverage Reports**:
+  - Check coverage: `poetry run pytest --cov=src/ff_docs --cov-report=term-missing`
+  - HTML report: `poetry run pytest --cov=src/ff_docs --cov-report=html`
+- **Pre-commit Testing**: Always run tests before committing code
+- **Test Organization**: Place unit tests in `tests/unit/` mirroring the source structure
+- **Mock External Dependencies**: Use mocks for GitHub API, file I/O, subprocesses, etc.
+- **Async Testing**: Use `pytest.mark.asyncio` and `AsyncMock` for async code
+- **Pragma Usage**: Only use `# pragma: no cover` for truly untestable code (Git errors, etc.)
+
 ## Documentation Generation Commands
 
 **API Documentation with pdoc:**

@@ -66,7 +66,9 @@ RUN mkdir -p /tmp/ff-docs /app/logs && \
 ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONPATH="/app/src:$PYTHONPATH" \
     ENVIRONMENT=production \
-    DEBUG=false
+    DEBUG=false \
+    SERVER_HOST=0.0.0.0 \
+    SERVER_PORT=8000
 
 # Switch to non-root user
 USER ffuser
@@ -79,7 +81,7 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
 EXPOSE 8000 8001
 
 # Default command
-CMD ["python", "-m", "uvicorn", "ff_docs.server.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "-m", "ff_docs", "serve-api"]
 
 # Development stage
 FROM production as development
@@ -109,4 +111,4 @@ ENV ENVIRONMENT=development \
     RELOAD=true
 
 # Development command with hot reloading
-CMD ["python", "-m", "uvicorn", "ff_docs.server.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["python", "-m", "ff_docs", "serve-api", "--reload"]

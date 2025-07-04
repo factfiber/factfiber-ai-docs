@@ -47,10 +47,16 @@ export ENVIRONMENT="development"
 **Option A: Local Development**
 
 ```bash
-# Start FastAPI server with hot-reloading
+# Start FastAPI server with hot-reloading (defaults to 127.0.0.1)
+ff-docs serve-api --reload
+
+# Or bind to all interfaces for network access
 ff-docs serve-api --reload --host 0.0.0.0 --port 8000
 
 # Start MkDocs development server (separate terminal)
+docs-serve
+
+# Or bind to all interfaces
 docs-serve --dev-addr 0.0.0.0:8001
 
 # Generate API documentation

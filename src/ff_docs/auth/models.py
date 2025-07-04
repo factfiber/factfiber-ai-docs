@@ -45,6 +45,28 @@ class UserSession(BaseModel):
     )
     session_id: str = Field(..., description="Unique session identifier")
     expires_at: datetime = Field(..., description="Session expiration time")
+    access_token: str | None = Field(
+        None, description="GitHub access token (if available)"
+    )
+
+    @property
+    def username(self) -> str:
+        """Get username from user object."""
+        return self.user.username
+
+    @property
+    def user_id(self) -> str:
+        """Get user ID as string."""
+        return (
+            str(self.user.github_id)
+            if self.user.github_id
+            else self.user.username
+        )
+
+    @property
+    def email(self) -> str:
+        """Get email from user object."""
+        return self.user.email
 
 
 class TokenData(BaseModel):
