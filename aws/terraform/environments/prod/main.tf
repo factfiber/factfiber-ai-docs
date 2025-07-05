@@ -78,6 +78,23 @@ data "aws_ssm_parameter" "jwt_secret" {
   with_decryption = true
 }
 
+# SSM parameter for GitHub private repository token
+resource "aws_ssm_parameter" "github_private_repo_token" {
+  name        = "/factfiber/docs/github-private-repo-token"
+  description = "GitHub PAT for accessing private dependencies in CI/CD"
+  type        = "SecureString"
+  value       = "placeholder-set-manually"  # To be updated manually after creation
+
+  lifecycle {
+    ignore_changes = [value]  # Don't overwrite the manually set value
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "GitHub Private Repo Token"
+    Note = "Update value manually with GitHub PAT that has 'repo' scope"
+  })
+}
+
 # Lambda@Edge for authentication
 module "lambda_edge" {
   source = "../../modules/lambda-edge"

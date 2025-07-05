@@ -330,7 +330,29 @@ poetry run docs-serve
 poetry run docs-build
 ```
 
-### 8. Register with Documentation Portal
+### 8. Configure CI/CD Secrets
+
+If your repository uses the centralized documentation deployment pipeline, set up required GitHub Actions secrets:
+
+```bash
+# Deploy all required secrets from AWS infrastructure
+./scripts/deploy-github-secrets.sh factfiber/your-repo-name
+```
+
+This script automatically configures:
+
+- `AWS_DEPLOY_ROLE_ARN` - IAM role for deployment
+- `DOCS_S3_BUCKET` - S3 bucket name
+- `CLOUDFRONT_DISTRIBUTION_ID` - CloudFront distribution
+- `PRIVATE_REPO_TOKEN` - GitHub PAT for private dependencies
+
+**Prerequisites**:
+
+- AWS CLI configured with `factfiber-docs-deploy` profile
+- GitHub CLI (`gh`) authenticated
+- Terraform infrastructure deployed in `aws/terraform/environments/prod`
+
+### 9. Register with Documentation Portal
 
 Contact the documentation team to register your repository:
 
@@ -338,6 +360,7 @@ Contact the documentation team to register your repository:
 2. **Documentation Path**: Usually `docs/` in your repository
 3. **Access Permissions**: Specify which teams should have access
 4. **Build Configuration**: Confirm your build process works
+5. **CI/CD Status**: Confirm secrets are deployed if using central pipeline
 
 ## Centralized Configuration Strategy
 
