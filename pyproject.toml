@@ -28,12 +28,12 @@ docs-serve = "mkdocs serve --dev-addr 0.0.0.0:8000"
 python = ">=3.13,<3.14"
 # Core MkDocs and Material theme
 mkdocs = "^1.6.0"
-mkdocs-material = "^9.5.0"
+mkdocs-material = "^9.6.15"
 # Multi-repository support
 mkdocs-multirepo-plugin = "^0.8.3"
 # Documentation enhancement plugins
 mkdocs-awesome-pages-plugin = "^2.9.0"
-mkdocs-git-revision-date-localized-plugin = "^1.2.0"
+mkdocs-git-revision-date-localized-plugin = "^1.4.7"
 mkdocs-jupyter = "^0.24.0"
 mkdocs-mermaid2-plugin = "^1.1.0"
 mkdocs-minify-plugin = "^0.8.0"
@@ -41,8 +41,8 @@ mkdocstrings = {extras = ["python"], version = "^0.25.0"}
 # Mathematical notation support
 pymdown-extensions = "^10.0"
 # FastAPI for documentation server
-fastapi = "^0.115.0"
-pydantic = "^2.0.0"
+fastapi = "^0.115.14"
+pydantic = "^2.11.7"
 pydantic-settings = "^2.0.0"
 uvicorn = {extras = ["standard"], version = "^0.31.0"}
 # GitHub integration
@@ -52,7 +52,7 @@ httpx = "^0.25.0"
 requests = "^2.32.4"
 # YAML processing
 PyYAML = "^6.0"
-"ruamel.yaml" = "^0.18.0"
+"ruamel.yaml" = "^0.18.14"
 # Authentication and security
 passlib = {extras = ["bcrypt"], version = "^1.7.4"}
 pyjwt = {extras = ["cryptography"], version = "^2.8.0"}
@@ -86,7 +86,7 @@ types-requests = "^2.31.0"
 # Development tools
 ingolstadt = {git = "https://github.com/factfiber/ingolstadt.git"}
 ipython = "^9.3.0"
-jupyterlab = "^4.0.0"
+jupyterlab = "^4.4.4"
 pip-audit = "^2.9.0"
 
 [tool.poetry.group.deploy.dependencies]
