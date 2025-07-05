@@ -193,7 +193,7 @@ jobs:
 
       - name: Generate API documentation
         run: |
-          poetry run docs-code
+          poetry run pdoc -o docs/reference/code --math --mermaid --docformat google --include-undocumented src/ff_docs
 
       - name: Build documentation
         run: |
