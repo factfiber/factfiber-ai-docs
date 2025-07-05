@@ -49,6 +49,12 @@ jobs:
           path: .venv
           key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
 
+      - name: Configure Git for private repositories
+        env:
+          GH_TOKEN: ${{ secrets.PRIVATE_REPO_TOKEN }}
+        run: |
+          git config --global url."https://${GH_TOKEN}@github.com/".insteadOf "https://github.com/"
+
       - name: Install dependencies
         run: poetry install --no-interaction --no-root
 
