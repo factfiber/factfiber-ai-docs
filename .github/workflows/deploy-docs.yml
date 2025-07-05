@@ -58,6 +58,10 @@ jobs:
       - name: Install dependencies
         run: poetry install --no-interaction --no-root
 
+      - name: Create temporary directories
+        run: |
+          mkdir -p tmp
+
       - name: Build documentation
         run: |
           poetry run mkdocs build --strict
