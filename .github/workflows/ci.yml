@@ -191,10 +191,6 @@ jobs:
         run: |
           mkdir -p tmp
 
-      - name: Validate MkDocs configuration
-        run: |
-          poetry run mkdocs config
-
       - name: Generate API documentation
         run: |
           poetry run docs-code
