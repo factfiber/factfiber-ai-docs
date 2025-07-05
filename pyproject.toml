@@ -61,7 +61,7 @@ prometheus-client = "^0.19.0"
 # Development utilities
 aiofiles = "^24.1.0"
 click = "^8.1.0"
-rich = "^13.0.0"
+rich = "^14.0.0"
 # API documentation generation
 pdoc = "^14.0.0"
 urllib3 = "^2.5.0"
