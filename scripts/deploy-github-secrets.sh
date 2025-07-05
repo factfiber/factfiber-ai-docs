@@ -15,6 +15,7 @@ done
 # Configuration
 REPO="${1:-}"
 AWS_PROFILE="${AWS_PROFILE:-factfiber-docs-deploy}"
+AWS_ADMIN_PROFILE="${AWS_ADMIN_PROFILE:-fc-aws-admin}"
 AWS_REGION="${AWS_REGION:-us-east-1}"
 TERRAFORM_DIR="aws/terraform/environments/prod"
 
@@ -26,7 +27,8 @@ if [ -z "$REPO" ]; then
 fi
 
 echo "🔧 Deploying GitHub Secrets for repository: $REPO"
-echo "   AWS Profile: $AWS_PROFILE"
+echo "   AWS Profile (Terraform): $AWS_PROFILE"
+echo "   AWS Profile (SSM): $AWS_ADMIN_PROFILE"
 echo "   AWS Region: $AWS_REGION"
 echo ""
 
@@ -81,12 +83,13 @@ echo ""
 
 # Step 2: Get private repo token from SSM
 echo "🔑 Getting private repository token from SSM..."
+# Use admin profile for SSM access
 PRIVATE_REPO_TOKEN=$(aws ssm get-parameter \
     --name "/factfiber/docs/github-private-repo-token" \
     --with-decryption \
     --query 'Parameter.Value' \
     --output text \
-    --profile "$AWS_PROFILE" \
+    --profile "$AWS_ADMIN_PROFILE" \
     --region "$AWS_REGION" 2>/dev/null || echo "")
 
 if [ -z "$PRIVATE_REPO_TOKEN" ] || [ "$PRIVATE_REPO_TOKEN" = "placeholder-set-manually" ]; then
@@ -99,7 +102,7 @@ if [ -z "$PRIVATE_REPO_TOKEN" ] || [ "$PRIVATE_REPO_TOKEN" = "placeholder-set-ma
     echo "     --value 'YOUR_GITHUB_PAT' \\"
     echo "     --type SecureString \\"
     echo "     --overwrite \\"
-    echo "     --profile $AWS_PROFILE \\"
+    echo "     --profile $AWS_ADMIN_PROFILE \\"
     echo "     --region $AWS_REGION"
     exit 1
 fi
