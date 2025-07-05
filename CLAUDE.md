@@ -459,14 +459,23 @@ All Python files should use the copyright header with the current year:
 
 ## Git Practices
 
-- **CRITICAL: NEVER use `--no-verify` flag with git commands**
-  - This bypasses all pre-commit hooks and linting checks
-  - All linting errors MUST be fixed before committing
+- **🚫 CRITICAL: NEVER use `--no-verify` flag with git commands 🚫**
+  - This bypasses ALL pre-commit hooks, linting, and type checking
+  - Using `--no-verify` is STRICTLY PROHIBITED and considered a severe violation
+  - All linting errors MUST be fixed before committing - NO EXCEPTIONS
   - If pre-commit fails, fix the errors, don't bypass them
+  - Commits made with `--no-verify` will be rejected in code review
+  - This can introduce:
+    - Type errors that break the build (like the mypy errors we just found)
+    - Security vulnerabilities
+    - Code style inconsistencies
+    - Failing tests
+    - Invalid documentation
 - Always fix linting issues before committing code
-- Run pre-commit hooks manually with `poetry run pre-commit run` before committing
+- Run pre-commit hooks manually with `poetry run pre-commit run --all-files` before committing
 - Address all linting issues rather than bypassing the checks
 - Use the systematic linting error fixing strategy outlined above
+- **ALWAYS stage all modified files** before committing to ensure complete validation
 
 ## CI/CD Workflow
 

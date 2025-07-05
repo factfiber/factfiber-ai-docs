@@ -196,23 +196,25 @@ class TestSecureSearchEngine:
             {"name": "repo2", "url": "https://github.com/org/repo2"},
         ]
 
-        with patch(
-            "ff_docs.aggregator.enrollment.get_enrolled_repositories",
-            return_value=mock_repos,
+        with (
+            patch(
+                "ff_docs.aggregator.enrollment.get_enrolled_repositories",
+                return_value=mock_repos,
+            ),
+            patch.object(
+                engine.permission_checker,
+                "check_repository_access",
+                AsyncMock(return_value=True),
+            ),
         ):
-            # Mock permission checker to grant access
-            engine.permission_checker.check_repository_access = AsyncMock(
-                return_value=True
-            )
-
             response = await engine.search(search_query, user_session)
 
-        assert response.query == "test search"
-        assert len(response.results) > 0
-        assert response.total_results > 0
-        assert response.filtered_results > 0
-        assert response.repositories_searched == ["repo1", "repo2"]
-        assert response.execution_time_ms > 0
+            assert response.query == "test search"
+            assert len(response.results) > 0
+            assert response.total_results > 0
+            assert response.filtered_results > 0
+            assert response.repositories_searched == ["repo1", "repo2"]
+            assert response.execution_time_ms > 0
 
     @pytest.mark.asyncio
     async def test_search_with_specific_repos(
@@ -228,18 +230,21 @@ class TestSecureSearchEngine:
             {"name": "repo3", "url": "https://github.com/org/repo3"},
         ]
 
-        with patch(
-            "ff_docs.aggregator.enrollment.get_enrolled_repositories",
-            return_value=mock_repos,
+        with (
+            patch(
+                "ff_docs.aggregator.enrollment.get_enrolled_repositories",
+                return_value=mock_repos,
+            ),
+            patch.object(
+                engine.permission_checker,
+                "check_repository_access",
+                AsyncMock(return_value=True),
+            ),
         ):
-            engine.permission_checker.check_repository_access = AsyncMock(
-                return_value=True
-            )
-
             response = await engine.search(query, user_session)
 
-        # Should only search requested repos
-        assert set(response.repositories_searched) == {"repo1", "repo3"}
+            # Should only search requested repos
+            assert set(response.repositories_searched) == {"repo1", "repo3"}
 
     @pytest.mark.asyncio
     async def test_search_with_permission_denied(
@@ -264,14 +269,15 @@ class TestSecureSearchEngine:
             ) -> bool:
                 return repo == "repo1"
 
-            engine.permission_checker.check_repository_access = AsyncMock(
-                side_effect=mock_check_access
-            )
+            with patch.object(
+                engine.permission_checker,
+                "check_repository_access",
+                AsyncMock(side_effect=mock_check_access),
+            ):
+                response = await engine.search(search_query, user_session)
 
-            response = await engine.search(search_query, user_session)
-
-        # Should only include accessible repo
-        assert response.repositories_searched == ["repo1"]
+                # Should only include accessible repo
+                assert response.repositories_searched == ["repo1"]
 
     @pytest.mark.asyncio
     async def test_search_with_permission_check_error(
@@ -299,14 +305,15 @@ class TestSecureSearchEngine:
                     raise ValueError(msg)
                 return True
 
-            engine.permission_checker.check_repository_access = AsyncMock(
-                side_effect=mock_check_access
-            )
+            with patch.object(
+                engine.permission_checker,
+                "check_repository_access",
+                AsyncMock(side_effect=mock_check_access),
+            ):
+                response = await engine.search(search_query, user_session)
 
-            response = await engine.search(search_query, user_session)
-
-        # Should only include repo1 (repo2 failed)
-        assert response.repositories_searched == ["repo1"]
+                # Should only include repo1 (repo2 failed)
+                assert response.repositories_searched == ["repo1"]
 
     @pytest.mark.asyncio
     async def test_get_accessible_repositories_anonymous(
@@ -327,20 +334,23 @@ class TestSecureSearchEngine:
             {"name": "repo3", "url": "https://github.com/org/repo3"},
         ]
 
-        with patch(
-            "ff_docs.aggregator.enrollment.get_enrolled_repositories",
-            return_value=mock_repos,
+        with (
+            patch(
+                "ff_docs.aggregator.enrollment.get_enrolled_repositories",
+                return_value=mock_repos,
+            ),
+            patch.object(
+                engine.permission_checker,
+                "check_repository_access",
+                AsyncMock(return_value=True),
+            ),
         ):
-            engine.permission_checker.check_repository_access = AsyncMock(
-                return_value=True
-            )
-
             repos = await engine._get_accessible_repositories(
                 user_session, ["repo1", "repo3"]
             )
 
-        # Should only check requested repos
-        assert set(repos) == {"repo1", "repo3"}
+            # Should only check requested repos
+            assert set(repos) == {"repo1", "repo3"}
 
     @pytest.mark.asyncio
     async def test_perform_search(self, engine: SecureSearchEngine) -> None:
@@ -585,20 +595,21 @@ class TestSearchIntegration:
             ) -> bool:
                 return repo == "infra"
 
-            engine.permission_checker.check_repository_access = AsyncMock(
-                side_effect=mock_check_access
-            )
+            with patch.object(
+                engine.permission_checker,
+                "check_repository_access",
+                AsyncMock(side_effect=mock_check_access),
+            ):
+                response = await engine.search(query, user_session)
 
-            response = await engine.search(query, user_session)
-
-        # Verify response structure
-        assert response.query == "kubernetes"
-        assert response.repositories_searched == ["infra"]
-        assert len(response.results) == 2  # 2 results from infra
-        assert all(r.repository == "infra" for r in response.results)
-        assert response.total_results == 2
-        assert response.filtered_results == 2
-        assert response.execution_time_ms > 0
+                # Verify response structure
+                assert response.query == "kubernetes"
+                assert response.repositories_searched == ["infra"]
+                assert len(response.results) == 2  # 2 results from infra
+                assert all(r.repository == "infra" for r in response.results)
+                assert response.total_results == 2
+                assert response.filtered_results == 2
+                assert response.execution_time_ms > 0
 
         # Verify result content
         for result in response.results:
@@ -639,14 +650,17 @@ class TestSearchIntegration:
             for i in range(1, 4)
         ]
 
-        with patch(
-            "ff_docs.aggregator.enrollment.get_enrolled_repositories",
-            return_value=mock_repos,
+        with (
+            patch(
+                "ff_docs.aggregator.enrollment.get_enrolled_repositories",
+                return_value=mock_repos,
+            ),
+            patch.object(
+                engine.permission_checker,
+                "check_repository_access",
+                AsyncMock(return_value=True),
+            ),
         ):
-            engine.permission_checker.check_repository_access = AsyncMock(
-                return_value=True
-            )
-
             # Get first page
             response1 = await engine.search(query_page1, user_session)
 
@@ -654,9 +668,9 @@ class TestSearchIntegration:
             query_page2 = SearchQuery(query="api", limit=2, offset=2)
             response2 = await engine.search(query_page2, user_session)
 
-        # Verify pagination
-        assert len(response1.results) == 2
-        assert len(response2.results) == 2
+            # Verify pagination
+            assert len(response1.results) == 2
+            assert len(response2.results) == 2
 
         # Verify no overlap
         results1_ids = {(r.title, r.repository) for r in response1.results}

@@ -57,7 +57,7 @@ repos:
       # Incremental MkDocs validation using ingolstadt
       - id: mkdocs-incremental
         name: MkDocs incremental validation
-        entry: poetry run mkdocs-incremental validate --incremental
+        entry: ./scripts/run-mkdocs-incremental.sh validate --incremental
         language: system
         files: '^docs/.*\.md$|^mkdocs\.yml$'
         pass_filenames: false

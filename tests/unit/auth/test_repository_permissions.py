@@ -170,16 +170,18 @@ class TestRepositoryPermissionManager:
             "github_permission": "write",
             "has_access": True,
         }
-        manager._get_repository_permission = AsyncMock(
-            return_value=permission_data
-        )
+        # Mock the method using patch.object
+        with patch.object(
+            manager,
+            "_get_repository_permission",
+            AsyncMock(return_value=permission_data),
+        ):
+            # Check access
+            has_access = await manager.check_repository_access(
+                "testuser", "test-repo", "token", "write"
+            )
 
-        # Check access
-        has_access = await manager.check_repository_access(
-            "testuser", "test-repo", "token", "write"
-        )
-
-        assert has_access is True
+            assert has_access is True
         # Should be cached now
         assert "testuser:test-repo" in manager._permission_cache
 
@@ -198,16 +200,18 @@ class TestRepositoryPermissionManager:
             "github_permission": "none",
             "has_access": False,
         }
-        manager._get_repository_permission = AsyncMock(
-            return_value=permission_data
-        )
+        # Mock the method using patch.object
+        with patch.object(
+            manager,
+            "_get_repository_permission",
+            AsyncMock(return_value=permission_data),
+        ):
+            # Check access
+            has_access = await manager.check_repository_access(
+                "testuser", "test-repo", "token", "read"
+            )
 
-        # Check access
-        has_access = await manager.check_repository_access(
-            "testuser", "test-repo", "token", "read"
-        )
-
-        assert has_access is False
+            assert has_access is False
 
     @pytest.mark.asyncio
     async def test_check_repository_access_api_failure(
@@ -217,14 +221,15 @@ class TestRepositoryPermissionManager:
         manager.settings.github.org = "test-org"
 
         # Mock _get_repository_permission to return None
-        manager._get_repository_permission = AsyncMock(return_value=None)
+        with patch.object(
+            manager, "_get_repository_permission", AsyncMock(return_value=None)
+        ):
+            # Check access
+            has_access = await manager.check_repository_access(
+                "testuser", "test-repo", "token", "read"
+            )
 
-        # Check access
-        has_access = await manager.check_repository_access(
-            "testuser", "test-repo", "token", "read"
-        )
-
-        assert has_access is False
+            assert has_access is False
 
     @pytest.mark.asyncio
     async def test_check_repository_access_exception(
@@ -232,16 +237,17 @@ class TestRepositoryPermissionManager:
     ) -> None:
         """Test checking repository access with exception."""
         # Mock _get_cached_permission to raise exception
-        manager._get_cached_permission = MagicMock(
-            side_effect=Exception("Cache error")
-        )
+        with patch.object(
+            manager,
+            "_get_cached_permission",
+            MagicMock(side_effect=Exception("Cache error")),
+        ):
+            # Check access
+            has_access = await manager.check_repository_access(
+                "testuser", "test-repo", "token", "read"
+            )
 
-        # Check access
-        has_access = await manager.check_repository_access(
-            "testuser", "test-repo", "token", "read"
-        )
-
-        assert has_access is False
+            assert has_access is False
 
     @pytest.mark.asyncio
     async def test_get_repository_permission_success(
@@ -308,7 +314,7 @@ class TestRepositoryPermissionManager:
         self, manager: RepositoryPermissionManager
     ) -> None:
         """Test getting repository permission with no organization."""
-        manager.settings.github.org = None
+        manager.settings.github.org = None  # type: ignore[assignment]
 
         result = await manager._get_repository_permission(
             "testuser", "test-repo", "token"
@@ -423,24 +429,26 @@ class TestRepositoryPermissionManager:
                     "has_access": False,
                 }
 
-            manager._get_repository_permission = AsyncMock(
-                side_effect=mock_get_perm
-            )
+            # Mock the method using patch.object
+            with patch.object(
+                manager,
+                "_get_repository_permission",
+                AsyncMock(side_effect=mock_get_perm),
+            ):
+                result = await manager.get_user_repository_permissions(
+                    "testuser", "token"
+                )
 
-            result = await manager.get_user_repository_permissions(
-                "testuser", "token"
-            )
-
-        assert "repo1" in result
-        assert result["repo1"] == ["repo:read", "repo:write"]
-        assert "repo2" not in result  # No access
+                assert "repo1" in result
+                assert result["repo1"] == ["repo:read", "repo:write"]
+                assert "repo2" not in result  # No access
 
     @pytest.mark.asyncio
     async def test_get_user_repository_permissions_no_org(
         self, manager: RepositoryPermissionManager
     ) -> None:
         """Test getting user repository permissions with no org."""
-        manager.settings.github.org = None
+        manager.settings.github.org = None  # type: ignore[assignment]
 
         result = await manager.get_user_repository_permissions(
             "testuser", "token"
@@ -503,23 +511,26 @@ class TestRepositoryPermissionManager:
             "repo2": ["repo:read"],
             "repo3": ["repo:read", "repo:write", "repo:admin"],
         }
-        manager.get_user_repository_permissions = AsyncMock(
-            return_value=mock_permissions
-        )
+        with patch.object(
+            manager,
+            "get_user_repository_permissions",
+            AsyncMock(return_value=mock_permissions),
+        ):
+            result = await manager.get_accessible_repositories(
+                "testuser", "token"
+            )
 
-        result = await manager.get_accessible_repositories("testuser", "token")
+            assert len(result) == 3
 
-        assert len(result) == 3
+            # Check repo1
+            repo1 = next(r for r in result if r["repository"] == "repo1")
+            assert repo1["has_read"] is True
+            assert repo1["has_write"] is True
+            assert repo1["has_admin"] is False
 
-        # Check repo1
-        repo1 = next(r for r in result if r["repository"] == "repo1")
-        assert repo1["has_read"] is True
-        assert repo1["has_write"] is True
-        assert repo1["has_admin"] is False
-
-        # Check repo3
-        repo3 = next(r for r in result if r["repository"] == "repo3")
-        assert repo3["has_admin"] is True
+            # Check repo3
+            repo3 = next(r for r in result if r["repository"] == "repo3")
+            assert repo3["has_admin"] is True
 
     @pytest.mark.asyncio
     async def test_get_accessible_repositories_none(
@@ -527,11 +538,16 @@ class TestRepositoryPermissionManager:
     ) -> None:
         """Test getting accessible repositories with no access."""
         # Mock get_user_repository_permissions to return empty
-        manager.get_user_repository_permissions = AsyncMock(return_value={})
+        with patch.object(
+            manager,
+            "get_user_repository_permissions",
+            AsyncMock(return_value={}),
+        ):
+            result = await manager.get_accessible_repositories(
+                "testuser", "token"
+            )
 
-        result = await manager.get_accessible_repositories("testuser", "token")
-
-        assert result == []
+            assert result == []
 
     @pytest.mark.asyncio
     async def test_validate_repository_list_access(
@@ -545,17 +561,20 @@ class TestRepositoryPermissionManager:
         ) -> bool:
             return repo in ["repo1", "repo3"]
 
-        manager.check_repository_access = AsyncMock(side_effect=mock_check)
+        with patch.object(
+            manager,
+            "check_repository_access",
+            AsyncMock(side_effect=mock_check),
+        ):
+            result = await manager.validate_repository_list_access(
+                "testuser", "token", ["repo1", "repo2", "repo3"]
+            )
 
-        result = await manager.validate_repository_list_access(
-            "testuser", "token", ["repo1", "repo2", "repo3"]
-        )
-
-        assert result == {
-            "repo1": True,
-            "repo2": False,
-            "repo3": True,
-        }
+            assert result == {
+                "repo1": True,
+                "repo2": False,
+                "repo3": True,
+            }
 
     def test_clear_user_cache(
         self, manager: RepositoryPermissionManager
